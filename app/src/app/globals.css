@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --degen-green: 5 150 105;
+    --degen-red: 220 38 38;
+    --degen-bg: 240 242 245;
+    --degen-card: 255 255 255;
+    --degen-border: 226 232 240;
+    --degen-muted: 100 116 139;
+    --degen-accent: 8 145 178;
+    --degen-accent-alt: 124 58 237;
+    --degen-text: 15 23 42;
+    --degen-text-secondary: 71 85 105;
+  }
+
+  .dark {
+    --degen-green: 0 255 136;
+    --degen-red: 255 68 68;
+    --degen-bg: 10 10 15;
+    --degen-card: 18 18 26;
+    --degen-border: 30 30 46;
+    --degen-muted: 107 114 128;
+    --degen-accent: 0 212 255;
+    --degen-accent-alt: 191 0 255;
+    --degen-text: 255 255 255;
+    --degen-text-secondary: 148 163 184;
+  }
+
+  body {
+    @apply bg-degen-dark text-degen-text antialiased;
+  }
+}
+
+/* Light mode background mesh */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(0, 212, 255, 0.12), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 90% 70%, rgba(124, 58, 237, 0.10), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(5, 150, 105, 0.08), transparent 50%),
+    rgb(var(--degen-bg));
+  transition: background 0.3s ease;
+}
+
+.dark body::before {
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(0, 212, 255, 0.06), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 90% 70%, rgba(191, 0, 255, 0.04), transparent 50%),
+    rgb(var(--degen-bg));
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-degen-accent hover:bg-degen-accent/80 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-yes {
+    @apply bg-degen-green/20 hover:bg-degen-green/30 text-degen-green border border-degen-green/50 font-bold py-3 px-6 rounded-lg transition-all duration-200;
+  }
+
+  .btn-no {
+    @apply bg-degen-red/20 hover:bg-degen-red/30 text-degen-red border border-degen-red/50 font-bold py-3 px-6 rounded-lg transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-degen-card border border-degen-border rounded-xl p-6 hover:border-degen-accent/30 transition-all duration-200;
+  }
+
+  .input-field {
+    @apply w-full bg-degen-dark border border-degen-border rounded-lg px-4 py-3 text-degen-text placeholder-degen-muted focus:outline-none focus:border-degen-accent transition-colors;
+    color-scheme: light;
+  }
+
+  .dark .input-field {
+    color-scheme: dark;
+  }
+
+  .stat-box {
+    @apply bg-degen-dark border border-degen-border rounded-lg p-4 text-center;
+  }
+}
+
+/* Wallet adapter overrides */
+.wallet-adapter-button {
+  @apply !bg-degen-accent !rounded-lg;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--degen-bg));
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--degen-border));
+  border-radius: 3px;
+}
+
+/* Nav pills */
+.nav-pill {
+  @apply px-5 py-2 rounded-lg text-base font-display font-bold tracking-wide
+    text-degen-accent border border-transparent
+    hover:border-degen-accent/30 hover:bg-degen-accent/10
+    transition-all duration-200;
+}
+
+/* Filter pills */
+.filter-pill {
+  @apply px-5 py-2.5 rounded-lg text-sm font-bold tracking-wide uppercase
+    border border-degen-border text-degen-muted bg-degen-card
+    hover:text-degen-text hover:border-degen-accent/40
+    transition-all duration-200;
+}
+
+.filter-pill-active {
+  @apply border-degen-accent text-white bg-degen-accent
+    shadow-[0_0_12px_rgba(var(--degen-accent),0.35)];
+}
+
+/* Logo glow */
+.logo-glow img {
+  filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5)) drop-shadow(0 0 20px rgba(0, 212, 255, 0.2));
+  transition: filter 0.3s ease;
+}
+
+.logo-glow:hover img {
+  filter: drop-shadow(0 0 12px rgba(0, 212, 255, 0.7)) drop-shadow(0 0 30px rgba(0, 212, 255, 0.35));
+}
+
+/* Neon gradient text for headings */
+.neon-text {
+  background: linear-gradient(
+    135deg,
+    rgb(var(--degen-green)),
+    rgb(var(--degen-accent)),
+    rgb(var(--degen-accent-alt))
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 30px rgba(var(--degen-accent), 0.3));
+}

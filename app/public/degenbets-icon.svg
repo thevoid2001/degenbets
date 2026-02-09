@@ -1,0 +1,19 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b6b"/>
+      <stop offset="50%" style="stop-color:#feca57"/>
+      <stop offset="100%" style="stop-color:#48dbfb"/>
+    </linearGradient>
+  </defs>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Righteous&amp;display=swap');
+    .icon-text {
+      font-family: 'Righteous', cursive;
+      font-size: 120px;
+      fill: #000;
+    }
+  </style>
+  <rect x="10" y="10" width="180" height="180" rx="40" fill="url(#iconGradient)" transform="rotate(-5 100 100)"/>
+  <text x="50%" y="145" text-anchor="middle" class="icon-text">D</text>
+</svg>
