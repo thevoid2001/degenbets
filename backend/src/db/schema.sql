@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS markets (
     status              VARCHAR(16) NOT NULL DEFAULT 'open', -- open | resolved | voided
     outcome             BOOLEAN,                             -- NULL until resolved; TRUE=yes, FALSE=no
     creator_fee_claimed BOOLEAN NOT NULL DEFAULT FALSE,
+    category            VARCHAR(32) NOT NULL DEFAULT 'misc',  -- sports | crypto | politics | entertainment | misc
     image_url           TEXT,                            -- optional market image URL
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
