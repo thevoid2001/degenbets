@@ -1,0 +1,6 @@
+/market/:id/ /market/0/index.html 200
+/market/:id /market/0/index.html 200
+/trader/:wallet/ /trader/0/index.html 200
+/trader/:wallet /trader/0/index.html 200
+/creator/:wallet/ /creator/0/index.html 200
+/creator/:wallet /creator/0/index.html 200
