@@ -387,6 +387,32 @@ router.put("/:pubkey/image", async (req: Request, res: Response) => {
 });
 
 // ---------------------------------------------------------------------------
+// DELETE /api/markets/:id
+// ---------------------------------------------------------------------------
+
+router.delete("/:id", async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const isNumeric = /^\d+$/.test(id);
+    const sql = isNumeric
+      ? "DELETE FROM markets WHERE market_id = $1 RETURNING pubkey, market_id"
+      : "DELETE FROM markets WHERE pubkey = $1 RETURNING pubkey, market_id";
+
+    const result = await query(sql, [isNumeric ? Number(id) : id]);
+
+    if (result.length === 0) {
+      res.status(404).json({ error: "Market not found" });
+      return;
+    }
+
+    res.json({ deleted: true, market_id: (result[0] as any).market_id, pubkey: (result[0] as any).pubkey });
+  } catch (err) {
+    console.error("[markets] Delete error:", err);
+    res.status(500).json({ error: "Failed to delete market" });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
