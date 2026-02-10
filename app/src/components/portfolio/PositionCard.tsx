@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { ClaimButton } from "./ClaimButton";
 import { useSellPosition } from "@/hooks/useSellPosition";
 import type { PositionData } from "@/lib/types";
@@ -30,12 +29,12 @@ export function PositionCard({ position, onClaimed }: PositionCardProps) {
     <div className="card">
       <div className="flex justify-between items-start">
         <div>
-          <Link
+          <a
             href={`/market/${position.market_pubkey}`}
             className="text-lg font-bold hover:text-degen-accent transition-colors"
           >
             {position.question || position.market_pubkey.slice(0, 8) + "..."}
-          </Link>
+          </a>
           <div className="flex items-center gap-3 mt-2 text-sm">
             <span
               className={`px-2 py-0.5 rounded text-xs font-bold ${

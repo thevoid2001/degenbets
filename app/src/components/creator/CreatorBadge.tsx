@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 interface CreatorBadgeProps {
   wallet: string;
   reputation?: number;
@@ -16,7 +14,7 @@ export function CreatorBadge({
   const short = `${wallet.slice(0, 4)}...${wallet.slice(-4)}`;
 
   return (
-    <Link
+    <a
       href={`/creator/${wallet}`}
       className="inline-flex items-center gap-2 text-sm text-degen-muted hover:text-degen-text transition-colors"
     >
@@ -30,6 +28,6 @@ export function CreatorBadge({
       {voidedCount !== undefined && voidedCount > 0 && (
         <span className="text-degen-red">{voidedCount} voided</span>
       )}
-    </Link>
+    </a>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { API_URL } from "@/lib/constants";
 
 interface BettorEntry {
@@ -84,12 +83,12 @@ export function BettorTable() {
               >
                 <td className="py-3 px-2 font-bold">{b.rank}</td>
                 <td className="py-3 px-2 font-mono">
-                  <Link
+                  <a
                     href={`/trader/${b.wallet}`}
                     className="text-degen-accent hover:underline"
                   >
                     {b.wallet.slice(0, 4)}...{b.wallet.slice(-4)}
-                  </Link>
+                  </a>
                 </td>
                 <td className="py-3 px-2 text-right">
                   {(b.total_wagered / 1e9).toFixed(2)} SOL

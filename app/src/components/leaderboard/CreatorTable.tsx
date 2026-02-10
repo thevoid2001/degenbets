@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { API_URL } from "@/lib/constants";
 import type { CreatorProfileData } from "@/lib/types";
 
@@ -46,12 +45,12 @@ export function CreatorTable() {
             >
               <td className="py-3 px-2 font-bold">{i + 1}</td>
               <td className="py-3 px-2 font-mono">
-                <Link
+                <a
                   href={`/creator/${c.wallet}`}
                   className="text-degen-accent hover:underline"
                 >
                   {c.wallet.slice(0, 4)}...{c.wallet.slice(-4)}
-                </Link>
+                </a>
               </td>
               <td className="py-3 px-2 text-right">{c.markets_created}</td>
               <td className="py-3 px-2 text-right">

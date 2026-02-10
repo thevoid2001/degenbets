@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { OddsBar } from "./OddsBar";
 import { Countdown } from "./Countdown";
 import { API_URL } from "@/lib/constants";
@@ -12,7 +11,7 @@ export function MarketCard({ market }: MarketCardProps) {
   const totalPool = market.yes_pool + market.no_pool;
 
   return (
-    <Link href={`/market/${market.pubkey}`}>
+    <a href={`/market/${market.pubkey}`}>
       <div className="card cursor-pointer overflow-hidden !p-0 h-full flex flex-col hover:border-degen-accent/50 transition-all">
         {market.image_url && (
           <img
@@ -54,6 +53,6 @@ export function MarketCard({ market }: MarketCardProps) {
           </div>
         </div>
       </div>
-    </Link>
+    </a>
   );
 }
