@@ -1,14 +1,22 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { MarketDetail } from "@/components/markets/MarketDetail";
 import { BetPanel } from "@/components/markets/BetPanel";
 import { DealerChat } from "@/components/dealer/DealerChat";
 import { useMarket } from "@/hooks/useMarket";
 
+function useRouteParam(segment: number) {
+  const [param, setParam] = useState("");
+  useEffect(() => {
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    setParam(parts[segment] || "");
+  }, [segment]);
+  return param;
+}
+
 export default function MarketPageClient() {
-  const pathname = usePathname();
-  const id = pathname.split("/").filter(Boolean)[1] || "";
+  const id = useRouteParam(1);
   const { market, positions, loading, refetch } = useMarket(id);
 
   if (loading) {

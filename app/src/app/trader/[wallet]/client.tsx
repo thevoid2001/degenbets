@@ -1,14 +1,22 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PortfolioStats } from "@/components/portfolio/PortfolioStats";
 import { PositionCard } from "@/components/portfolio/PositionCard";
 import { usePositions } from "@/hooks/usePositions";
 
+function useRouteParam(segment: number) {
+  const [param, setParam] = useState("");
+  useEffect(() => {
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    setParam(parts[segment] || "");
+  }, [segment]);
+  return param;
+}
+
 export default function TraderProfileClient() {
-  const pathname = usePathname();
-  const wallet = pathname.split("/").filter(Boolean)[1] || "";
+  const wallet = useRouteParam(1);
   const { positions, stats, loading } = usePositions(wallet);
 
   return (

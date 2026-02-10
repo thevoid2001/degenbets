@@ -1,13 +1,21 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { CreatorStats } from "@/components/creator/CreatorStats";
 import { CreatorMarkets } from "@/components/creator/CreatorMarkets";
 import { useCreatorProfile } from "@/hooks/useCreatorProfile";
 
+function useRouteParam(segment: number) {
+  const [param, setParam] = useState("");
+  useEffect(() => {
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    setParam(parts[segment] || "");
+  }, [segment]);
+  return param;
+}
+
 export default function CreatorPageClient() {
-  const pathname = usePathname();
-  const wallet = pathname.split("/").filter(Boolean)[1] || "";
+  const wallet = useRouteParam(1);
   const { profile, markets, loading } = useCreatorProfile(wallet);
 
   if (loading) {
