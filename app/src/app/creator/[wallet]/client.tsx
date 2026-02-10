@@ -1,13 +1,13 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { CreatorStats } from "@/components/creator/CreatorStats";
 import { CreatorMarkets } from "@/components/creator/CreatorMarkets";
 import { useCreatorProfile } from "@/hooks/useCreatorProfile";
 
 export default function CreatorPageClient() {
-  const params = useParams();
-  const wallet = params.wallet as string;
+  const pathname = usePathname();
+  const wallet = pathname.split("/").filter(Boolean)[1] || "";
   const { profile, markets, loading } = useCreatorProfile(wallet);
 
   if (loading) {

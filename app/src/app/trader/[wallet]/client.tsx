@@ -1,14 +1,14 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { PortfolioStats } from "@/components/portfolio/PortfolioStats";
 import { PositionCard } from "@/components/portfolio/PositionCard";
 import { usePositions } from "@/hooks/usePositions";
 
 export default function TraderProfileClient() {
-  const params = useParams();
-  const wallet = params.wallet as string;
+  const pathname = usePathname();
+  const wallet = pathname.split("/").filter(Boolean)[1] || "";
   const { positions, stats, loading } = usePositions(wallet);
 
   return (
