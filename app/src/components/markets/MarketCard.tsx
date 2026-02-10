@@ -16,7 +16,7 @@ export function MarketCard({ market }: MarketCardProps) {
       <div className="card cursor-pointer overflow-hidden !p-0 h-full flex flex-col hover:border-degen-accent/50 transition-all">
         {market.image_url && (
           <img
-            src={`${API_URL}${market.image_url}`}
+            src={market.image_url.startsWith("http") ? market.image_url : `${API_URL}${market.image_url}`}
             alt=""
             className="w-full h-40 object-cover"
           />

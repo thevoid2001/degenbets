@@ -97,7 +97,7 @@ export function MarketDetail({ market }: MarketDetailProps) {
       {market.image_url && (
         <div className="mb-6">
           <img
-            src={`${API_URL}${market.image_url}`}
+            src={market.image_url.startsWith("http") ? market.image_url : `${API_URL}${market.image_url}`}
             alt=""
             className="w-full max-h-64 object-cover rounded-lg border border-degen-border"
           />
