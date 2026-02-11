@@ -106,8 +106,8 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
   const amountLamports = Math.floor(amountNum * 1e9);
 
   // Calculate potential payout using share-based model
-  // Each winning share pays out ~0.935 SOL (after 6.5% total fees)
-  const PAYOUT_PER_SHARE = 0.935;
+  // Each winning share pays out ~0.97 SOL (after 3% total fees: 2% treasury + 1% creator)
+  const PAYOUT_PER_SHARE = 0.97;
   const calcPayout = () => {
     if (side === null || amountNum <= 0) return 0;
     const price = side ? yesPrice : noPrice;

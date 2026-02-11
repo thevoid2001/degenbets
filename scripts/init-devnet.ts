@@ -8,13 +8,13 @@ import { Program, BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { Degenbets } from "../target/types/degenbets";
 
-const MIN_LIQUIDITY_LAMPORTS = 10_000_000;   // 0.01 SOL min liquidity per market
-const TREASURY_RAKE_BPS = 500;               // 5%
-const CREATOR_RAKE_BPS = 150;                // 1.5%
+const MIN_LIQUIDITY_LAMPORTS = 1_000_000_000; // 1 SOL min liquidity per market
+const TREASURY_RAKE_BPS = 200;               // 2%
+const CREATOR_RAKE_BPS = 100;                // 1%
 const MIN_TRADE_LAMPORTS = 10_000_000;       // 0.01 SOL min trade
 const BETTING_CUTOFF_SECONDS = 3600;         // 1 hour before resolution
 const CHALLENGE_PERIOD_SECONDS = 86400;      // 24 hours after resolution
-const SWAP_FEE_BPS = 30;                     // 0.3% swap fee
+const SWAP_FEE_BPS = 50;                     // 0.5% swap fee
 
 async function main() {
   const provider = anchor.AnchorProvider.env();
@@ -70,8 +70,8 @@ async function main() {
   console.log("Config PDA:", configPda.toBase58());
   console.log("Authority/Treasury:", authority.toBase58());
   console.log(`Min Liquidity: ${(MIN_LIQUIDITY_LAMPORTS / 1e9)} SOL`);
-  console.log("Treasury Rake: 5%");
-  console.log("Creator Rake: 1.5%");
+  console.log(`Treasury Rake: ${TREASURY_RAKE_BPS / 100}%`);
+  console.log(`Creator Rake: ${CREATOR_RAKE_BPS / 100}%`);
   console.log(`Min Trade: ${(MIN_TRADE_LAMPORTS / 1e9)} SOL`);
   console.log(`Swap Fee: ${SWAP_FEE_BPS / 100}%`);
   console.log(`Betting Cutoff: ${BETTING_CUTOFF_SECONDS}s (${BETTING_CUTOFF_SECONDS / 3600}h before resolution)`);

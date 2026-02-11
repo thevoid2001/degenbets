@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/navigation";
 import { useCreateMarket } from "@/hooks/useCreateMarket";
-import { API_URL, CREATION_FEE_USD } from "@/lib/constants";
+import { API_URL } from "@/lib/constants";
 import { getConfigPda } from "@/lib/program";
 
 export function MarketForm() {
@@ -21,20 +21,20 @@ export function MarketForm() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [liquidityAmount, setLiquidityAmount] = useState("1");
-  const [feeSol, setFeeSol] = useState<number | null>(null);
+  const [minLiquidity, setMinLiquidity] = useState<number | null>(null);
   const [solPrice, setSolPrice] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
 
-  // Fetch creation fee from on-chain config and SOL price
+  // Fetch min liquidity from on-chain config and SOL price
   useEffect(() => {
-    async function fetchFee() {
+    async function fetchConfig() {
       try {
         const [configPda] = getConfigPda();
         const configInfo = await connection.getAccountInfo(configPda);
         if (configInfo && configInfo.data.length >= 93) {
-          // creation_fee_lamports at offset 72 (8 bytes u64)
-          const feeLamports = configInfo.data.readBigUInt64LE(72);
-          setFeeSol(Number(feeLamports) / 1e9);
+          // min_liquidity_lamports at offset 72 (8 bytes u64)
+          const minLiqLamports = configInfo.data.readBigUInt64LE(72);
+          setMinLiquidity(Number(minLiqLamports) / 1e9);
           // paused at offset 92 (1 byte bool)
           setPaused(configInfo.data[92] === 1);
         }
@@ -57,7 +57,7 @@ export function MarketForm() {
       }
     }
 
-    fetchFee();
+    fetchConfig();
     fetchSolPrice();
   }, [connection]);
 
@@ -154,7 +154,7 @@ export function MarketForm() {
     source.startsWith("http") &&
     date &&
     time &&
-    liquidityNum >= 0.1;
+    liquidityNum >= (minLiquidity ?? 1);
 
   return (
     <form onSubmit={handleSubmit} className="card space-y-6">
@@ -236,11 +236,11 @@ export function MarketForm() {
           onChange={(e) => setLiquidityAmount(e.target.value)}
           placeholder="1.0"
           className="input-field"
-          min="0.1"
+          min={minLiquidity ?? 1}
           step="0.1"
         />
         <p className="text-xs text-degen-muted mt-1">
-          SOL deposited into the AMM pool. More liquidity = tighter spreads.
+          Minimum {minLiquidity ?? 1} SOL. This SOL is deposited into the AMM pool and returned to you when the market resolves. More liquidity = tighter spreads.
         </p>
       </div>
 
@@ -285,36 +285,22 @@ export function MarketForm() {
 
       <div className="border-t border-degen-border pt-6 space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="text-degen-muted">Creation Fee:</span>
+          <span className="text-degen-muted">Liquidity Deposit:</span>
           <span className="font-bold">
-            {feeSol !== null
-              ? `${feeSol.toFixed(4)} SOL`
-              : "Loading..."}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-degen-muted">Initial Liquidity:</span>
-          <span className="font-bold">{liquidityNum.toFixed(2)} SOL</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-degen-muted">Total Cost:</span>
-          <span className="font-bold">
-            {feeSol !== null
-              ? `${(feeSol + liquidityNum).toFixed(4)} SOL`
-              : "Loading..."}
-            {feeSol !== null && solPrice !== null && (
+            {liquidityNum.toFixed(2)} SOL
+            {solPrice !== null && (
               <span className="text-degen-muted font-normal ml-1">
-                (~${((feeSol + liquidityNum) * solPrice).toFixed(0)})
+                (~${(liquidityNum * solPrice).toFixed(0)})
               </span>
             )}
           </span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-degen-muted">Your Earnings:</span>
-          <span className="font-bold text-degen-green">1.5% of all volume</span>
+          <span className="text-degen-muted">Creator Earnings:</span>
+          <span className="font-bold text-degen-green">1% of volume traded</span>
         </div>
         <p className="text-xs text-degen-muted">
-          Liquidity is deposited into the AMM and returned when the market resolves.
+          Your liquidity is returned to you when the market resolves. The return amount may vary slightly depending on trading activity (swap fees grow the pool in your favor).
         </p>
       </div>
 
@@ -327,14 +313,12 @@ export function MarketForm() {
           ? "Connect Wallet"
           : loading
             ? "Creating Market..."
-            : feeSol !== null
-              ? `Create Market — Pay ${(feeSol + liquidityNum).toFixed(4)} SOL`
-              : "Create Market"}
+            : `Create Market — Deposit ${liquidityNum.toFixed(2)} SOL`}
       </button>
 
       <p className="text-xs text-degen-muted text-center">
-        If your market can&apos;t be resolved clearly, it will be voided.
-        You lose the creation fee and your creator reputation takes a hit.
+        If your market can&apos;t be resolved clearly, it will be voided and your liquidity returned.
+        Voided markets affect your creator reputation.
       </p>
     </form>
   );

@@ -5,4 +5,3 @@ export const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.de
 export const PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_PROGRAM_ID || "5rCyhouLLq4RdFcsPmQDJkx531kptp3JPhhnoenVvq4L"
 );
-export const CREATION_FEE_USD = 20; // $20 USD equivalent
