@@ -155,12 +155,52 @@ router.post("/", async (req: Request, res: Response) => {
           claimed,
         ]
       );
+
+      // Update cost basis if provided (positive = buy, negative = sell)
+      const costBasisDelta = Number(req.body.costBasisDelta || 0);
+      if (costBasisDelta !== 0) {
+        await query(
+          `UPDATE positions SET cost_basis = GREATEST(0, cost_basis + $1) WHERE pubkey = $2`,
+          [costBasisDelta, positionPda.toBase58()]
+        );
+      }
     }
 
     res.json({ success: true });
   } catch (err) {
     console.error("[sync] Error:", err);
     res.status(500).json({ error: "Sync failed" });
+  }
+});
+
+// GET /api/sync/position?marketId=X&wallet=Y — fetch position with cost_basis
+router.get("/position", async (req: Request, res: Response) => {
+  try {
+    const { marketId, wallet } = req.query;
+    if (!marketId || !wallet) {
+      res.status(400).json({ error: "marketId and wallet are required" });
+      return;
+    }
+    const rows = await query(
+      `SELECT yes_shares, no_shares, claimed, cost_basis FROM positions WHERE market_id = $1 AND user_wallet = $2`,
+      [Number(marketId), wallet]
+    );
+    if (rows.length === 0) {
+      res.json({ position: null });
+      return;
+    }
+    const p = rows[0] as any;
+    res.json({
+      position: {
+        yes_shares: Number(p.yes_shares),
+        no_shares: Number(p.no_shares),
+        claimed: p.claimed,
+        cost_basis: Number(p.cost_basis),
+      },
+    });
+  } catch (err) {
+    console.error("[sync] Position fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch position" });
   }
 });
 

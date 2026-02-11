@@ -12,7 +12,7 @@ export function useSell() {
   const [loading, setLoading] = useState(false);
 
   const sell = useCallback(
-    async (marketPubkey: string, shares: number, side: boolean, marketId?: number) => {
+    async (marketPubkey: string, shares: number, side: boolean, marketId?: number, totalSharesBefore?: number, costBasis?: number) => {
       if (!publicKey) return;
       setLoading(true);
 
@@ -48,12 +48,17 @@ export function useSell() {
         const sig = await sendTransaction(tx, connection);
         await connection.confirmTransaction(sig, "confirmed");
 
-        // Sync on-chain data to backend DB
+        // Sync on-chain data to backend DB (reduce cost basis proportionally)
         if (marketId !== undefined) {
+          let costBasisDelta = 0;
+          if (totalSharesBefore && totalSharesBefore > 0 && costBasis && costBasis > 0) {
+            const proportion = shares / totalSharesBefore;
+            costBasisDelta = -Math.floor(proportion * costBasis);
+          }
           fetch(`${API_URL}/api/sync`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ marketId, userWallet: publicKey.toBase58() }),
+            body: JSON.stringify({ marketId, userWallet: publicKey.toBase58(), costBasisDelta }),
           }).catch(() => {});
         }
 

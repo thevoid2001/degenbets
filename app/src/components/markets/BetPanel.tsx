@@ -7,7 +7,7 @@ import { useBuy } from "@/hooks/useBuy";
 import { useSell } from "@/hooks/useSell";
 import { useDealer } from "@/hooks/useDealer";
 import { getConfigPda, getPositionPda } from "@/lib/program";
-import { PROGRAM_ID } from "@/lib/constants";
+import { PROGRAM_ID, API_URL } from "@/lib/constants";
 import type { MarketData } from "@/lib/types";
 
 const QUICK_AMOUNTS = [0.1, 0.5, 1.0, 5.0];
@@ -31,9 +31,10 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
   const [bettingCutoffSeconds, setBettingCutoffSeconds] = useState(0);
   const [exitFeeBps, setExitFeeBps] = useState(0);
 
-  // User's current position (shares)
+  // User's current position (shares + cost basis for P&L)
   const [userYesShares, setUserYesShares] = useState(0);
   const [userNoShares, setUserNoShares] = useState(0);
+  const [costBasis, setCostBasis] = useState(0); // lamports
   const [sellSharesInput, setSellSharesInput] = useState("");
 
   // Fetch config for pause, min bet, cutoff, exit fee
@@ -61,11 +62,12 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
     fetchConfig();
   }, [connection]);
 
-  // Fetch user's position on this market
+  // Fetch user's position on this market (on-chain shares + backend cost_basis)
   useEffect(() => {
     if (!publicKey) {
       setUserYesShares(0);
       setUserNoShares(0);
+      setCostBasis(0);
       return;
     }
     async function fetchPosition() {
@@ -87,9 +89,23 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
         setUserYesShares(0);
         setUserNoShares(0);
       }
+      // Fetch cost_basis from backend
+      try {
+        const res = await fetch(
+          `${API_URL}/api/sync/position?marketId=${market.market_id}&wallet=${publicKey!.toBase58()}`
+        );
+        const data = await res.json();
+        if (data.position) {
+          setCostBasis(data.position.cost_basis || 0);
+        } else {
+          setCostBasis(0);
+        }
+      } catch {
+        setCostBasis(0);
+      }
     }
     fetchPosition();
-  }, [publicKey, connection, market.pubkey, loading, sellLoading]);
+  }, [publicKey, connection, market.pubkey, market.market_id, loading, sellLoading]);
 
   const now = Math.floor(Date.now() / 1000);
   const cutoffTime = market.resolution_timestamp - bettingCutoffSeconds;
@@ -134,8 +150,9 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
     const maxShares = sellSide ? userYesShares : userNoShares;
     const finalShares = sellSharesRaw > 0 ? Math.min(sellSharesRaw, maxShares) : maxShares;
     if (finalShares <= 0) return;
+    const totalSharesBefore = userYesShares + userNoShares;
     try {
-      await sell(market.pubkey, finalShares, sellSide, market.market_id);
+      await sell(market.pubkey, finalShares, sellSide, market.market_id, totalSharesBefore, costBasis);
       setSellSharesInput("");
       setTimeout(() => onTxSuccess?.(), 1500);
     } catch (err) {
@@ -260,6 +277,9 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
         const totalValue = yesValue + noValue;
         const yesPayout = yesSharesSol * PAYOUT_PER_SHARE;
         const noPayout = noSharesSol * PAYOUT_PER_SHARE;
+        const costBasisSol = costBasis / 1e9;
+        const pnl = totalValue - costBasisSol;
+        const pnlPct = costBasisSol > 0 ? (pnl / costBasisSol) * 100 : 0;
 
         return (
         <div className="mt-6 pt-6 border-t border-degen-border">
@@ -268,19 +288,45 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
           {/* Position value summary */}
           <div className="mb-3 p-3 bg-degen-dark rounded-lg space-y-1 text-sm">
             <div className="flex justify-between">
+              <span className="text-degen-muted">Cost basis:</span>
+              <span className="font-bold">{costBasisSol.toFixed(4)} SOL</span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-degen-muted">Current value:</span>
               <span className="font-bold">{totalValue.toFixed(4)} SOL</span>
             </div>
+            {costBasis > 0 && (
+              <div className="flex justify-between">
+                <span className="text-degen-muted">P&L if sold now:</span>
+                <span className={`font-bold ${pnl >= 0 ? "text-degen-green" : "text-degen-red"}`}>
+                  {pnl >= 0 ? "+" : ""}{pnl.toFixed(4)} SOL ({pnl >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)
+                </span>
+              </div>
+            )}
             {userYesShares > 0 && (
               <div className="flex justify-between">
                 <span className="text-degen-muted">If YES wins:</span>
-                <span className="font-bold text-degen-green">{yesPayout.toFixed(4)} SOL</span>
+                <span className="font-bold text-degen-green">
+                  {yesPayout.toFixed(4)} SOL
+                  {costBasis > 0 && (
+                    <span className="text-xs ml-1">
+                      ({((yesPayout - costBasisSol) >= 0 ? "+" : "")}{(yesPayout - costBasisSol).toFixed(4)})
+                    </span>
+                  )}
+                </span>
               </div>
             )}
             {userNoShares > 0 && (
               <div className="flex justify-between">
                 <span className="text-degen-muted">If NO wins:</span>
-                <span className="font-bold text-degen-green">{noPayout.toFixed(4)} SOL</span>
+                <span className="font-bold text-degen-green">
+                  {noPayout.toFixed(4)} SOL
+                  {costBasis > 0 && (
+                    <span className="text-xs ml-1">
+                      ({((noPayout - costBasisSol) >= 0 ? "+" : "")}{(noPayout - costBasisSol).toFixed(4)})
+                    </span>
+                  )}
+                </span>
               </div>
             )}
           </div>

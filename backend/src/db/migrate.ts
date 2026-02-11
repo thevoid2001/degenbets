@@ -151,6 +151,9 @@ DO $$ BEGIN
     ALTER TABLE positions RENAME COLUMN no_amount TO no_shares;
   END IF;
 END $$;
+
+-- Positions: add cost_basis for P&L tracking
+ALTER TABLE positions ADD COLUMN IF NOT EXISTS cost_basis BIGINT NOT NULL DEFAULT 0;
 `;
 
 async function migrate(): Promise<void> {

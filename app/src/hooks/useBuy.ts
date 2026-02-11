@@ -54,11 +54,11 @@ export function useBuy() {
         const sig = await sendTransaction(tx, connection);
         await connection.confirmTransaction(sig, "confirmed");
 
-        // Sync on-chain data to backend DB
+        // Sync on-chain data to backend DB (include cost basis for P&L tracking)
         fetch(`${API_URL}/api/sync`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ marketId, userWallet: publicKey.toBase58() }),
+          body: JSON.stringify({ marketId, userWallet: publicKey.toBase58(), costBasisDelta: amountLamports }),
         }).catch(() => {});
 
         return sig;
