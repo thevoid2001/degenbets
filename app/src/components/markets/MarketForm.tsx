@@ -236,8 +236,8 @@ export function MarketForm() {
           onChange={(e) => setLiquidityAmount(e.target.value)}
           placeholder="1.0"
           className="input-field"
-          min={minLiquidity ?? 1}
-          step="0.1"
+          min={1}
+          step="any"
         />
         <p className="text-xs text-degen-muted mt-1">
           Minimum {minLiquidity ?? 1} SOL. This SOL is deposited into the AMM pool and returned to you when the market resolves. More liquidity = tighter spreads.
