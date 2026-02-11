@@ -125,6 +125,34 @@ END;
 $$;
 `;
 
+// Migrations for AMM rewrite: rename old parimutuel columns to AMM columns
+const AMM_MIGRATION_SQL = `
+-- Markets: rename yes_pool/no_pool -> yes_reserve/no_reserve (if old columns exist)
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='markets' AND column_name='yes_pool') THEN
+    ALTER TABLE markets RENAME COLUMN yes_pool TO yes_reserve;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='markets' AND column_name='no_pool') THEN
+    ALTER TABLE markets RENAME COLUMN no_pool TO no_reserve;
+  END IF;
+END $$;
+
+-- Markets: add new AMM columns if missing
+ALTER TABLE markets ADD COLUMN IF NOT EXISTS total_minted BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE markets ADD COLUMN IF NOT EXISTS initial_liquidity BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE markets ADD COLUMN IF NOT EXISTS swap_fee_bps INT NOT NULL DEFAULT 50;
+
+-- Positions: rename yes_amount/no_amount -> yes_shares/no_shares (if old columns exist)
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='positions' AND column_name='yes_amount') THEN
+    ALTER TABLE positions RENAME COLUMN yes_amount TO yes_shares;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='positions' AND column_name='no_amount') THEN
+    ALTER TABLE positions RENAME COLUMN no_amount TO no_shares;
+  END IF;
+END $$;
+`;
+
 async function migrate(): Promise<void> {
   console.log("[migrate] Connecting to database...");
 
@@ -132,6 +160,8 @@ async function migrate(): Promise<void> {
   try {
     console.log("[migrate] Running schema migrations...");
     await client.query(SCHEMA_SQL);
+    console.log("[migrate] Running AMM column migrations...");
+    await client.query(AMM_MIGRATION_SQL);
     console.log("[migrate] Schema migration completed successfully.");
   } catch (err) {
     console.error("[migrate] Migration failed:", err);
