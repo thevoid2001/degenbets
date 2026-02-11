@@ -1,6 +1,7 @@
 pub mod initialize;
 pub mod create_market;
-pub mod place_bet;
+pub mod buy;
+pub mod sell;
 pub mod resolve_market;
 pub mod void_market;
 pub mod claim_winnings;
@@ -14,11 +15,11 @@ pub mod transfer_authority;
 pub mod reclaim_stale_market;
 pub mod close_market;
 pub mod close_position;
-pub mod sell_position;
 
 pub use initialize::*;
 pub use create_market::*;
-pub use place_bet::*;
+pub use buy::*;
+pub use sell::*;
 pub use resolve_market::*;
 pub use void_market::*;
 pub use claim_winnings::*;
@@ -32,4 +33,3 @@ pub use transfer_authority::*;
 pub use reclaim_stale_market::*;
 pub use close_market::*;
 pub use close_position::*;
-pub use sell_position::*;

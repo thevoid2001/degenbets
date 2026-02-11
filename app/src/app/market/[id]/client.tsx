@@ -54,14 +54,14 @@ export default function MarketPageClient() {
                     {pos.user_wallet.slice(0, 4)}...{pos.user_wallet.slice(-4)}
                   </span>
                   <div className="flex gap-4 text-sm">
-                    {pos.yes_amount > 0 && (
+                    {pos.yes_shares > 0 && (
                       <span className="text-degen-green">
-                        YES: {(pos.yes_amount / 1e9).toFixed(2)} SOL
+                        YES: {(pos.yes_shares / 1e9).toFixed(2)} shares
                       </span>
                     )}
-                    {pos.no_amount > 0 && (
+                    {pos.no_shares > 0 && (
                       <span className="text-degen-red">
-                        NO: {(pos.no_amount / 1e9).toFixed(2)} SOL
+                        NO: {(pos.no_shares / 1e9).toFixed(2)} shares
                       </span>
                     )}
                   </div>

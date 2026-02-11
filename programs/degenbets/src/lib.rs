@@ -1,11 +1,12 @@
 use anchor_lang::prelude::*;
 
-declare_id!("5rCyhouLLq4RdFcsPmQDJkx531kptp3JPhhnoenVvq4L");
+declare_id!("CwN2DiAqGTCXXVUCbRTCpD925Aq7e5VTRsLESrXr7SuL");
 
 pub mod state;
 pub mod instructions;
 pub mod errors;
 pub mod events;
+pub mod math;
 
 use instructions::*;
 
@@ -16,24 +17,24 @@ pub mod degenbets {
     pub fn initialize(
         ctx: Context<Initialize>,
         treasury: Pubkey,
-        creation_fee_lamports: u64,
+        min_liquidity_lamports: u64,
         treasury_rake_bps: u16,
         creator_rake_bps: u16,
-        min_bet_lamports: u64,
+        min_trade_lamports: u64,
         betting_cutoff_seconds: i64,
         challenge_period_seconds: i64,
-        exit_fee_bps: u16,
+        swap_fee_bps: u16,
     ) -> Result<()> {
         instructions::initialize::handler(
             ctx,
             treasury,
-            creation_fee_lamports,
+            min_liquidity_lamports,
             treasury_rake_bps,
             creator_rake_bps,
-            min_bet_lamports,
+            min_trade_lamports,
             betting_cutoff_seconds,
             challenge_period_seconds,
-            exit_fee_bps,
+            swap_fee_bps,
         )
     }
 
@@ -46,12 +47,17 @@ pub mod degenbets {
         question: String,
         resolution_source: String,
         resolution_timestamp: i64,
+        liquidity_amount: u64,
     ) -> Result<()> {
-        instructions::create_market::handler(ctx, question, resolution_source, resolution_timestamp)
+        instructions::create_market::handler(ctx, question, resolution_source, resolution_timestamp, liquidity_amount)
     }
 
-    pub fn place_bet(ctx: Context<PlaceBet>, amount: u64, side: bool) -> Result<()> {
-        instructions::place_bet::handler(ctx, amount, side)
+    pub fn buy(ctx: Context<Buy>, amount: u64, side: bool) -> Result<()> {
+        instructions::buy::handler(ctx, amount, side)
+    }
+
+    pub fn sell(ctx: Context<Sell>, shares: u64, side: bool) -> Result<()> {
+        instructions::sell::handler(ctx, shares, side)
     }
 
     pub fn resolve_market(ctx: Context<ResolveMarket>, outcome: bool) -> Result<()> {
@@ -85,24 +91,24 @@ pub mod degenbets {
     pub fn update_config(
         ctx: Context<UpdateConfig>,
         treasury: Option<Pubkey>,
-        creation_fee_lamports: Option<u64>,
+        min_liquidity_lamports: Option<u64>,
         treasury_rake_bps: Option<u16>,
         creator_rake_bps: Option<u16>,
-        min_bet_lamports: Option<u64>,
+        min_trade_lamports: Option<u64>,
         betting_cutoff_seconds: Option<i64>,
         challenge_period_seconds: Option<i64>,
-        exit_fee_bps: Option<u16>,
+        swap_fee_bps: Option<u16>,
     ) -> Result<()> {
         instructions::update_config::handler(
             ctx,
             treasury,
-            creation_fee_lamports,
+            min_liquidity_lamports,
             treasury_rake_bps,
             creator_rake_bps,
-            min_bet_lamports,
+            min_trade_lamports,
             betting_cutoff_seconds,
             challenge_period_seconds,
-            exit_fee_bps,
+            swap_fee_bps,
         )
     }
 
@@ -120,9 +126,5 @@ pub mod degenbets {
 
     pub fn close_position(ctx: Context<ClosePosition>) -> Result<()> {
         instructions::close_position::handler(ctx)
-    }
-
-    pub fn sell_position(ctx: Context<SellPosition>, amount: u64, side: bool) -> Result<()> {
-        instructions::sell_position::handler(ctx, amount, side)
     }
 }

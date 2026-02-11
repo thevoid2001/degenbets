@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { usePlaceBet } from "@/hooks/usePlaceBet";
-import { useSellPosition } from "@/hooks/useSellPosition";
+import { useBuy } from "@/hooks/useBuy";
+import { useSell } from "@/hooks/useSell";
 import { useDealer } from "@/hooks/useDealer";
 import { getConfigPda, getPositionPda } from "@/lib/program";
 import { PROGRAM_ID } from "@/lib/constants";
@@ -22,8 +22,8 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
   const { publicKey } = useWallet();
   const [side, setSide] = useState<boolean | null>(null);
   const [amount, setAmount] = useState("");
-  const { placeBet, loading } = usePlaceBet();
-  const { sellPosition, loading: sellLoading } = useSellPosition();
+  const { buy, loading } = useBuy();
+  const { sell, loading: sellLoading } = useSell();
   const { comment } = useDealer(market.pubkey);
 
   const [paused, setPaused] = useState(false);
@@ -31,10 +31,10 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
   const [bettingCutoffSeconds, setBettingCutoffSeconds] = useState(0);
   const [exitFeeBps, setExitFeeBps] = useState(0);
 
-  // User's current position
-  const [userYes, setUserYes] = useState(0);
-  const [userNo, setUserNo] = useState(0);
-  const [sellAmount, setSellAmount] = useState("");
+  // User's current position (shares)
+  const [userYesShares, setUserYesShares] = useState(0);
+  const [userNoShares, setUserNoShares] = useState(0);
+  const [sellSharesInput, setSellSharesInput] = useState("");
 
   // Fetch config for pause, min bet, cutoff, exit fee
   useEffect(() => {
@@ -64,8 +64,8 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
   // Fetch user's position on this market
   useEffect(() => {
     if (!publicKey) {
-      setUserYes(0);
-      setUserNo(0);
+      setUserYesShares(0);
+      setUserNoShares(0);
       return;
     }
     async function fetchPosition() {
@@ -74,18 +74,18 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
         const [positionPda] = getPositionPda(marketPda, publicKey!);
         const info = await connection.getAccountInfo(positionPda);
         if (info && info.data.length >= 82) {
-          // Position layout: 8 disc + 32 market + 32 user + 8 yes_amount + 8 no_amount
+          // Position layout: 8 disc + 32 market + 32 user + 8 yes_shares + 8 no_shares
           const yes = Number(info.data.readBigUInt64LE(72));
           const no = Number(info.data.readBigUInt64LE(80));
-          setUserYes(yes);
-          setUserNo(no);
+          setUserYesShares(yes);
+          setUserNoShares(no);
         } else {
-          setUserYes(0);
-          setUserNo(0);
+          setUserYesShares(0);
+          setUserNoShares(0);
         }
       } catch {
-        setUserYes(0);
-        setUserNo(0);
+        setUserYesShares(0);
+        setUserNoShares(0);
       }
     }
     fetchPosition();
@@ -96,46 +96,47 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
   const isBettingClosed = bettingCutoffSeconds > 0 && now >= cutoffTime;
   const minBetSol = minBetLamports / 1e9;
 
-  const yesPool = Number(market.yes_pool) || 0;
-  const noPool = Number(market.no_pool) || 0;
-  const totalPool = yesPool + noPool;
-  const yesPct = totalPool > 0 ? Math.round((yesPool / totalPool) * 100) : 50;
-  const noPct = 100 - yesPct;
+  // Use API-provided prices (already computed from AMM reserves)
+  const yesPrice = market.yes_price ?? 0.5;
+  const noPrice = market.no_price ?? 0.5;
+  const yesPct = Math.round(yesPrice * 100);
+  const noPct = Math.round(noPrice * 100);
 
   const amountNum = parseFloat(amount) || 0;
   const amountLamports = Math.floor(amountNum * 1e9);
 
-  // Calculate potential winnings
+  // Calculate potential payout using share-based model
+  // Each winning share pays out ~0.935 SOL (after 6.5% total fees)
+  const PAYOUT_PER_SHARE = 0.935;
   const calcPayout = () => {
     if (side === null || amountNum <= 0) return 0;
-    const newYes = yesPool + (side ? amountLamports : 0);
-    const newNo = noPool + (side ? 0 : amountLamports);
-    const newTotal = newYes + newNo;
-    const prizePool = newTotal * 0.965; // after 2% treasury + 1.5% creator rake
-    const winningPool = side ? newYes : newNo;
-    return (amountLamports / winningPool) * prizePool;
+    const price = side ? yesPrice : noPrice;
+    if (price <= 0) return 0;
+    // shares bought = SOL spent / price per share
+    const sharesBought = amountNum / price;
+    return sharesBought * PAYOUT_PER_SHARE;
   };
 
-  const payout = calcPayout();
-  const profit = payout - amountLamports;
-  const profitPct = amountLamports > 0 ? (profit / amountLamports) * 100 : 0;
+  const payoutSol = calcPayout();
+  const profitSol = payoutSol - amountNum;
+  const profitPct = amountNum > 0 ? (profitSol / amountNum) * 100 : 0;
 
-  const handleBet = async () => {
+  const handleBuy = async () => {
     if (!publicKey || side === null || amountLamports <= 0) return;
-    await placeBet(market.pubkey, market.market_id, amountLamports, side);
+    await buy(market.market_id, amountLamports, side);
     // Refresh market data from backend after sync completes
     setTimeout(() => onTxSuccess?.(), 1500);
   };
 
   const handleSell = async (sellSide: boolean) => {
-    const sellNum = parseFloat(sellAmount) || 0;
-    const sellLamports = Math.floor(sellNum * 1e9);
-    const maxLamports = sellSide ? userYes : userNo;
-    const finalAmount = sellLamports > 0 ? Math.min(sellLamports, maxLamports) : maxLamports;
-    if (finalAmount <= 0) return;
+    const sellNum = parseFloat(sellSharesInput) || 0;
+    const sellSharesRaw = Math.floor(sellNum * 1e9);
+    const maxShares = sellSide ? userYesShares : userNoShares;
+    const finalShares = sellSharesRaw > 0 ? Math.min(sellSharesRaw, maxShares) : maxShares;
+    if (finalShares <= 0) return;
     try {
-      await sellPosition(market.pubkey, finalAmount, sellSide, market.market_id);
-      setSellAmount("");
+      await sell(market.pubkey, finalShares, sellSide, market.market_id);
+      setSellSharesInput("");
       setTimeout(() => onTxSuccess?.(), 1500);
     } catch (err) {
       // error logged in hook
@@ -144,12 +145,12 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
 
   const belowMinBet = minBetLamports > 0 && amountLamports > 0 && amountLamports < minBetLamports;
   const betDisabled = !publicKey || side === null || amountNum <= 0 || loading || paused || isBettingClosed || belowMinBet;
-  const hasPosition = userYes > 0 || userNo > 0;
+  const hasPosition = userYesShares > 0 || userNoShares > 0;
   const canSell = hasPosition && !isBettingClosed && !paused;
 
   return (
     <div className="card sticky top-4">
-      <h3 className="text-lg font-bold mb-4">Place Your Bet</h3>
+      <h3 className="text-lg font-bold mb-4">Buy Shares</h3>
 
       {paused && (
         <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-400 text-sm font-medium text-center">
@@ -159,7 +160,7 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
 
       {isBettingClosed && !paused && (
         <div className="mb-4 p-3 bg-degen-red/10 border border-degen-red/30 rounded-lg text-degen-red text-sm font-medium text-center">
-          Betting Closed — Too close to resolution
+          Trading Closed — Too close to resolution
         </div>
       )}
 
@@ -172,7 +173,7 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
               : "bg-degen-card border border-degen-border text-degen-muted hover:text-degen-green"
           }`}
         >
-          YES {yesPct}%
+          YES {yesPct}c
         </button>
         <button
           onClick={() => setSide(false)}
@@ -182,7 +183,7 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
               : "bg-degen-card border border-degen-border text-degen-muted hover:text-degen-red"
           }`}
         >
-          NO {noPct}%
+          NO {noPct}c
         </button>
       </div>
 
@@ -216,46 +217,51 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
       {side !== null && amountNum > 0 && (
         <div className="mb-4 p-3 bg-degen-dark rounded-lg space-y-1 text-sm">
           <div className="flex justify-between">
-            <span className="text-degen-muted">If {side ? "YES" : "NO"} wins:</span>
+            <span className="text-degen-muted">Share price:</span>
+            <span className="font-bold">{((side ? yesPrice : noPrice) * 100).toFixed(1)}c</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-degen-muted">You receive:</span>
-            <span className="font-bold">{(payout / 1e9).toFixed(4)} SOL</span>
+            <span className="text-degen-muted">Shares received (est):</span>
+            <span className="font-bold">{(amountNum / (side ? yesPrice : noPrice)).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-degen-muted">If {side ? "YES" : "NO"} wins, you receive:</span>
+            <span className="font-bold">{payoutSol.toFixed(4)} SOL</span>
           </div>
           <div className="flex justify-between">
             <span className="text-degen-muted">Profit:</span>
-            <span className={`font-bold ${profit > 0 ? "text-degen-green" : "text-degen-red"}`}>
-              +{(profit / 1e9).toFixed(4)} SOL ({profitPct.toFixed(0)}%)
+            <span className={`font-bold ${profitSol > 0 ? "text-degen-green" : "text-degen-red"}`}>
+              +{profitSol.toFixed(4)} SOL ({profitPct.toFixed(0)}%)
             </span>
           </div>
         </div>
       )}
 
       <button
-        onClick={handleBet}
+        onClick={handleBuy}
         disabled={betDisabled}
         className="btn-primary w-full"
       >
         {!publicKey
           ? "Connect Wallet"
           : loading
-            ? "Placing Bet..."
+            ? "Buying..."
             : side === null
               ? "Pick a Side"
-              : `Bet ${amountNum} SOL on ${side ? "YES" : "NO"}`}
+              : `Buy ${amountNum} SOL of ${side ? "YES" : "NO"}`}
       </button>
 
       {/* Sell Position Section */}
       {hasPosition && (
         <div className="mt-6 pt-6 border-t border-degen-border">
-          <h4 className="text-sm font-bold mb-3">Your Position</h4>
+          <h4 className="text-sm font-bold mb-3">Your Shares</h4>
           <div className="space-y-3">
-            {userYes > 0 && (
+            {userYesShares > 0 && (
               <div className="flex items-center justify-between p-3 bg-degen-dark rounded-lg">
                 <div>
                   <span className="text-degen-green font-bold text-sm">YES</span>
                   <span className="text-sm text-degen-muted ml-2">
-                    {(userYes / 1e9).toFixed(4)} SOL
+                    {(userYesShares / 1e9).toFixed(4)} shares
                   </span>
                 </div>
                 {canSell && (
@@ -269,12 +275,12 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
                 )}
               </div>
             )}
-            {userNo > 0 && (
+            {userNoShares > 0 && (
               <div className="flex items-center justify-between p-3 bg-degen-dark rounded-lg">
                 <div>
                   <span className="text-degen-red font-bold text-sm">NO</span>
                   <span className="text-sm text-degen-muted ml-2">
-                    {(userNo / 1e9).toFixed(4)} SOL
+                    {(userNoShares / 1e9).toFixed(4)} shares
                   </span>
                 </div>
                 {canSell && (
@@ -291,12 +297,12 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
             {canSell && (
               <div>
                 <label className="text-xs text-degen-muted mb-1 block">
-                  Sell amount (SOL) — leave empty to sell all
+                  Shares to sell — leave empty to sell all
                 </label>
                 <input
                   type="number"
-                  value={sellAmount}
-                  onChange={(e) => setSellAmount(e.target.value)}
+                  value={sellSharesInput}
+                  onChange={(e) => setSellSharesInput(e.target.value)}
                   placeholder="All"
                   className="input-field text-sm"
                   min="0"

@@ -6,8 +6,14 @@ export interface MarketData {
   creator: string;
   question: string;
   resolution_source: string;
-  yes_pool: number;
-  no_pool: number;
+  yes_reserve: number;
+  no_reserve: number;
+  total_minted: number;
+  initial_liquidity: number;
+  swap_fee_bps: number;
+  yes_price: number;
+  no_price: number;
+  total_volume: number;
   resolution_timestamp: number;
   status: "open" | "resolved" | "voided";
   outcome: boolean | null;
@@ -21,8 +27,8 @@ export interface PositionData {
   market_id?: number;
   market_pubkey: string;
   user_wallet: string;
-  yes_amount: number;
-  no_amount: number;
+  yes_shares: number;
+  no_shares: number;
   claimed: boolean;
   winnings?: number;
   question?: string;

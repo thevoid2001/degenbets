@@ -60,8 +60,11 @@ interface MarketRow {
   creator: string;
   question: string;
   resolution_source: string;
-  yes_pool: string;
-  no_pool: string;
+  yes_reserve: string;
+  no_reserve: string;
+  total_minted: string;
+  initial_liquidity: string;
+  swap_fee_bps: number;
   resolution_timestamp: string;
   status: string;
   outcome: boolean | null;
@@ -77,8 +80,8 @@ interface PositionRow {
   market_id: number;
   pubkey: string;
   user_wallet: string;
-  yes_amount: string;
-  no_amount: string;
+  yes_shares: string;
+  no_shares: string;
   claimed: boolean;
   created_at: string;
 }
@@ -133,7 +136,7 @@ router.post("/", async (req: Request, res: Response) => {
     if (result.length === 0) {
       // Already existed
       const existing = await query<MarketRow>(
-        "SELECT *, (yes_pool + no_pool) AS total_volume FROM markets WHERE pubkey = $1",
+        "SELECT *, (yes_reserve + no_reserve) AS total_volume FROM markets WHERE pubkey = $1",
         [pubkey]
       );
       res.json({ market: formatMarket(existing[0]), created: false });
@@ -193,7 +196,7 @@ router.get("/", async (req: Request, res: Response) => {
     const validSorts: Record<string, string> = {
       created: "created_at",
       resolution: "resolution_timestamp",
-      volume: "(yes_pool + no_pool)",
+      volume: "(yes_reserve + no_reserve)",
       market_id: "market_id",
     };
     const sortCol =
@@ -206,7 +209,7 @@ router.get("/", async (req: Request, res: Response) => {
     const offsetVal = Math.max(0, Number(offset) || 0);
 
     const sql = `
-      SELECT *, (yes_pool + no_pool) AS total_volume
+      SELECT *, (yes_reserve + no_reserve) AS total_volume
       FROM markets
       ${whereClause}
       ORDER BY ${sortCol} ${sortDir}
@@ -250,8 +253,8 @@ router.get("/:id", async (req: Request, res: Response) => {
     // Support both numeric market_id and pubkey string
     const isNumeric = /^\d+$/.test(id);
     const sql = isNumeric
-      ? "SELECT *, (yes_pool + no_pool) AS total_volume FROM markets WHERE market_id = $1"
-      : "SELECT *, (yes_pool + no_pool) AS total_volume FROM markets WHERE pubkey = $1";
+      ? "SELECT *, (yes_reserve + no_reserve) AS total_volume FROM markets WHERE market_id = $1"
+      : "SELECT *, (yes_reserve + no_reserve) AS total_volume FROM markets WHERE pubkey = $1";
 
     const markets = await query<MarketRow & { total_volume: string }>(sql, [
       isNumeric ? Number(id) : id,
@@ -314,7 +317,7 @@ router.get("/:id/positions", async (req: Request, res: Response) => {
     const positions = await query<PositionRow>(
       `SELECT * FROM positions
        WHERE market_id = $1
-       ORDER BY (yes_amount + no_amount) DESC
+       ORDER BY (yes_shares + no_shares) DESC
        LIMIT 100`,
       [marketId]
     );
@@ -324,9 +327,9 @@ router.get("/:id/positions", async (req: Request, res: Response) => {
       positions: positions.map((p) => ({
         pubkey: p.pubkey,
         user_wallet: p.user_wallet,
-        yes_amount: Number(p.yes_amount),
-        no_amount: Number(p.no_amount),
-        total_stake: String(BigInt(p.yes_amount) + BigInt(p.no_amount)),
+        yes_shares: Number(p.yes_shares),
+        no_shares: Number(p.no_shares),
+        total_shares: String(BigInt(p.yes_shares) + BigInt(p.no_shares)),
         claimed: p.claimed,
         created_at: p.created_at,
       })),
@@ -417,9 +420,9 @@ router.delete("/:id", async (req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 
 function formatMarket(m: MarketRow & { total_volume?: string }) {
-  const yesPool = BigInt(m.yes_pool);
-  const noPool = BigInt(m.no_pool);
-  const totalPool = yesPool + noPool;
+  const yesReserve = BigInt(m.yes_reserve || 0);
+  const noReserve = BigInt(m.no_reserve || 0);
+  const totalReserve = yesReserve + noReserve;
 
   return {
     market_id: m.market_id,
@@ -427,16 +430,19 @@ function formatMarket(m: MarketRow & { total_volume?: string }) {
     creator: m.creator,
     question: m.question,
     resolution_source: m.resolution_source,
-    yes_pool: Number(m.yes_pool),
-    no_pool: Number(m.no_pool),
-    total_volume: Number(totalPool),
-    yes_probability:
-      totalPool > 0n
-        ? Number((yesPool * 10000n) / totalPool) / 10000
+    yes_reserve: Number(m.yes_reserve),
+    no_reserve: Number(m.no_reserve),
+    total_minted: Number(m.total_minted || 0),
+    initial_liquidity: Number(m.initial_liquidity || 0),
+    swap_fee_bps: m.swap_fee_bps || 30,
+    total_volume: Number(totalReserve),
+    yes_price:
+      totalReserve > 0n
+        ? Number((noReserve * 10000n) / totalReserve) / 10000
         : 0.5,
-    no_probability:
-      totalPool > 0n
-        ? Number((noPool * 10000n) / totalPool) / 10000
+    no_price:
+      totalReserve > 0n
+        ? Number((yesReserve * 10000n) / totalReserve) / 10000
         : 0.5,
     resolution_timestamp: Number(m.resolution_timestamp),
     status: m.status,

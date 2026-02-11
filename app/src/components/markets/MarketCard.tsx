@@ -8,7 +8,7 @@ interface MarketCardProps {
 }
 
 export function MarketCard({ market }: MarketCardProps) {
-  const totalPool = market.yes_pool + market.no_pool;
+  const totalReserve = market.yes_reserve + market.no_reserve;
 
   return (
     <a href={`/market/${market.pubkey}`}>
@@ -44,10 +44,10 @@ export function MarketCard({ market }: MarketCardProps) {
           </div>
 
           <div className="mt-auto">
-            <OddsBar yesPool={market.yes_pool} noPool={market.no_pool} />
+            <OddsBar yesPrice={market.yes_price} noPrice={market.no_price} />
 
             <div className="flex justify-between items-center mt-3 text-xs text-degen-muted">
-              <span className="font-medium">{(totalPool / 1e9).toFixed(2)} SOL</span>
+              <span className="font-medium">{(totalReserve / 1e9).toFixed(2)} SOL</span>
               <Countdown timestamp={market.resolution_timestamp} />
             </div>
           </div>

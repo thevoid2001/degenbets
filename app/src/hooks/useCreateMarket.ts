@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, Transaction, SystemProgram } from "@solana/web3.js";
+import { Transaction, SystemProgram } from "@solana/web3.js";
 import { getConfigPda, getMarketPda, getCreatorProfilePda } from "@/lib/program";
 import { PROGRAM_ID } from "@/lib/constants";
 
@@ -12,7 +12,12 @@ export function useCreateMarket() {
   const [loading, setLoading] = useState(false);
 
   const createMarket = useCallback(
-    async (question: string, resolutionSource: string, resolutionTimestamp: number) => {
+    async (
+      question: string,
+      resolutionSource: string,
+      resolutionTimestamp: number,
+      liquidityLamports: number
+    ) => {
       if (!publicKey) return null;
       setLoading(true);
 
@@ -20,21 +25,18 @@ export function useCreateMarket() {
         const [configPda] = getConfigPda();
         const [creatorProfilePda] = getCreatorProfilePda(publicKey);
 
-        // Fetch config account data
+        // Fetch config to get market_count
         const configInfo = await connection.getAccountInfo(configPda);
         if (!configInfo) throw new Error("Config not initialized");
 
-        // Parse treasury from config (offset: 8 + 32 = 40, 32 bytes)
-        const treasury = new PublicKey(configInfo.data.subarray(40, 72));
-
-        // Parse market_count from config (offset: 8 + 32 + 32 + 8 + 2 + 2 = 84, 8 bytes u64)
+        // Parse market_count (offset: 8 + 32 + 32 + 8 + 2 + 2 = 84, u64)
         const marketCount = configInfo.data.readBigUInt64LE(84);
         const [marketPda] = getMarketPda(Number(marketCount));
 
         // Build create_market instruction
         const discriminator = Buffer.from([
           103, 226, 97, 235, 200, 188, 251, 254,
-        ]); // from IDL
+        ]);
 
         // Encode question as Anchor string: 4-byte LE length + utf8 bytes
         const questionBytes = Buffer.from(question, "utf-8");
@@ -48,6 +50,10 @@ export function useCreateMarket() {
         const timestampBuf = Buffer.alloc(8);
         timestampBuf.writeBigInt64LE(BigInt(resolutionTimestamp));
 
+        // liquidity_amount (u64 LE)
+        const liquidityBuf = Buffer.alloc(8);
+        liquidityBuf.writeBigUInt64LE(BigInt(liquidityLamports));
+
         const data = Buffer.concat([
           discriminator,
           questionLen,
@@ -55,6 +61,7 @@ export function useCreateMarket() {
           sourceLen,
           sourceBytes,
           timestampBuf,
+          liquidityBuf,
         ]);
 
         const ix = {
@@ -64,7 +71,6 @@ export function useCreateMarket() {
             { pubkey: configPda, isSigner: false, isWritable: true },
             { pubkey: marketPda, isSigner: false, isWritable: true },
             { pubkey: creatorProfilePda, isSigner: false, isWritable: true },
-            { pubkey: treasury, isSigner: false, isWritable: true },
             { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
           ],
           data,

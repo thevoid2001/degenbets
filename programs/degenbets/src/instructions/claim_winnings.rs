@@ -49,18 +49,15 @@ pub fn handler(ctx: Context<ClaimWinnings>) -> Result<()> {
     );
 
     let outcome = market.outcome.unwrap();
-    let user_bet = if outcome {
-        position.yes_amount
+    let user_winning_shares = if outcome {
+        position.yes_shares
     } else {
-        position.no_amount
+        position.no_shares
     };
-    require!(user_bet > 0, DegenBetsError::NotAWinner);
+    require!(user_winning_shares > 0, DegenBetsError::NotAWinner);
 
-    let total_pot = market.yes_pool
-        .checked_add(market.no_pool)
-        .ok_or(DegenBetsError::MathOverflow)?;
-
-    // Use stored fee values (computed once at resolution time) for consistency
+    // AMM payout: each winning share gets prize_pool / total_minted SOL
+    let total_pot = market.total_minted;
     let total_rake = market.treasury_fee
         .checked_add(market.creator_fee)
         .ok_or(DegenBetsError::MathOverflow)?;
@@ -69,16 +66,14 @@ pub fn handler(ctx: Context<ClaimWinnings>) -> Result<()> {
         .checked_sub(total_rake)
         .ok_or(DegenBetsError::MathOverflow)?;
 
-    let winning_pool = if outcome { market.yes_pool } else { market.no_pool };
-
-    // user_share = (user_bet / winning_pool) * prize_pool
-    let user_share = (user_bet as u128)
+    // user_share = (user_winning_shares / total_minted) * prize_pool
+    let user_share = (user_winning_shares as u128)
         .checked_mul(prize_pool as u128)
         .ok_or(DegenBetsError::MathOverflow)?
-        .checked_div(winning_pool as u128)
+        .checked_div(total_pot as u128)
         .ok_or(DegenBetsError::MathOverflow)? as u64;
 
-    // Rent-exemption guard: ensure market PDA retains enough for rent
+    // Rent-exemption guard
     let rent = Rent::get()?;
     let min_balance = rent.minimum_balance(Market::SIZE);
     let market_lamports = ctx.accounts.market.to_account_info().lamports();

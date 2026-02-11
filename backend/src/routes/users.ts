@@ -24,8 +24,8 @@ interface PositionWithMarket {
   question: string;
   market_status: string;
   outcome: boolean | null;
-  yes_amount: string;
-  no_amount: string;
+  yes_shares: string;
+  no_shares: string;
   claimed: boolean;
   position_created_at: string;
   resolution_timestamp: string;
@@ -74,8 +74,8 @@ router.get("/:wallet/positions", async (req: Request, res: Response) => {
          m.question,
          m.status AS market_status,
          m.outcome,
-         p.yes_amount,
-         p.no_amount,
+         p.yes_shares,
+         p.no_shares,
          p.claimed,
          p.created_at AS position_created_at,
          m.resolution_timestamp
@@ -89,8 +89,8 @@ router.get("/:wallet/positions", async (req: Request, res: Response) => {
 
     // Calculate unrealized PnL for open positions
     const formatted = positions.map((p) => {
-      const yesAmt = BigInt(p.yes_amount);
-      const noAmt = BigInt(p.no_amount);
+      const yesAmt = BigInt(p.yes_shares);
+      const noAmt = BigInt(p.no_shares);
       const totalStake = yesAmt + noAmt;
 
       let pnl: string | null = null;
@@ -123,8 +123,8 @@ router.get("/:wallet/positions", async (req: Request, res: Response) => {
         won: p.market_status === "resolved" && p.outcome !== null
           ? (p.outcome ? yesAmt > 0n : noAmt > 0n)
           : undefined,
-        yes_amount: Number(p.yes_amount),
-        no_amount: Number(p.no_amount),
+        yes_shares: Number(p.yes_shares),
+        no_shares: Number(p.no_shares),
         total_stake: String(totalStake),
         claimed: p.claimed,
         result,
@@ -169,12 +169,12 @@ router.get("/:wallet/stats", async (req: Request, res: Response) => {
     // Compute stats from positions + markets (user_stats table is not populated by sync)
     const rows = await query<{
       [key: string]: unknown;
-      yes_amount: string;
-      no_amount: string;
+      yes_shares: string;
+      no_shares: string;
       market_status: string;
       outcome: boolean | null;
     }>(
-      `SELECT p.yes_amount, p.no_amount, m.status AS market_status, m.outcome
+      `SELECT p.yes_shares, p.no_shares, m.status AS market_status, m.outcome
        FROM positions p
        JOIN markets m ON p.market_id = m.market_id
        WHERE p.user_wallet = $1`,
@@ -188,8 +188,8 @@ router.get("/:wallet/stats", async (req: Request, res: Response) => {
     let marketsWon = 0;
 
     for (const r of rows) {
-      const yes = BigInt(r.yes_amount);
-      const no = BigInt(r.no_amount);
+      const yes = BigInt(r.yes_shares);
+      const no = BigInt(r.no_shares);
       totalWagered += yes + no;
       marketsParticipated++;
 

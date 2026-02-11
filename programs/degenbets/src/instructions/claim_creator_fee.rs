@@ -46,21 +46,39 @@ pub fn handler(ctx: Context<ClaimCreatorFee>) -> Result<()> {
         DegenBetsError::ChallengePeriodActive
     );
 
-    // Use stored fee value (computed once at resolution time)
-    let creator_fee = market.creator_fee;
+    // Creator gets: stored fee + LP value (winning tokens left in AMM pool)
+    let total_pot = market.total_minted;
+    let total_rake = market.treasury_fee
+        .checked_add(market.creator_fee)
+        .ok_or(DegenBetsError::MathOverflow)?;
+    let prize_pool = total_pot
+        .checked_sub(total_rake)
+        .ok_or(DegenBetsError::MathOverflow)?;
+
+    let outcome = market.outcome.unwrap();
+    let winning_reserve = if outcome { market.yes_reserve } else { market.no_reserve };
+    let lp_value = (winning_reserve as u128)
+        .checked_mul(prize_pool as u128)
+        .ok_or(DegenBetsError::MathOverflow)?
+        .checked_div(total_pot as u128)
+        .ok_or(DegenBetsError::MathOverflow)? as u64;
+
+    let total_payout = market.creator_fee
+        .checked_add(lp_value)
+        .ok_or(DegenBetsError::MathOverflow)?;
 
     // Rent-exemption guard
     let rent = Rent::get()?;
     let min_balance = rent.minimum_balance(Market::SIZE);
     let market_lamports = ctx.accounts.market.to_account_info().lamports();
     require!(
-        market_lamports.checked_sub(creator_fee).unwrap_or(0) >= min_balance,
+        market_lamports.checked_sub(total_payout).unwrap_or(0) >= min_balance,
         DegenBetsError::InsufficientRentBalance
     );
 
     // Transfer from market PDA to creator
-    **ctx.accounts.market.to_account_info().try_borrow_mut_lamports()? -= creator_fee;
-    **ctx.accounts.creator.to_account_info().try_borrow_mut_lamports()? += creator_fee;
+    **ctx.accounts.market.to_account_info().try_borrow_mut_lamports()? -= total_payout;
+    **ctx.accounts.creator.to_account_info().try_borrow_mut_lamports()? += total_payout;
 
     // Update market
     let market = &mut ctx.accounts.market;
@@ -69,13 +87,13 @@ pub fn handler(ctx: Context<ClaimCreatorFee>) -> Result<()> {
     // Update creator profile
     let profile = &mut ctx.accounts.creator_profile;
     profile.total_fees_earned = profile.total_fees_earned
-        .checked_add(creator_fee)
+        .checked_add(total_payout)
         .ok_or(DegenBetsError::MathOverflow)?;
 
     emit!(CreatorFeeClaimed {
         market: ctx.accounts.market.key(),
         creator: ctx.accounts.creator.key(),
-        amount: creator_fee,
+        amount: total_payout,
     });
 
     Ok(())

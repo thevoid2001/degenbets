@@ -1,7 +1,7 @@
 "use client";
 
 import { ClaimButton } from "./ClaimButton";
-import { useSellPosition } from "@/hooks/useSellPosition";
+import { useSell } from "@/hooks/useSell";
 import type { PositionData } from "@/lib/types";
 
 interface PositionCardProps {
@@ -10,16 +10,16 @@ interface PositionCardProps {
 }
 
 export function PositionCard({ position, onClaimed }: PositionCardProps) {
-  const { sellPosition, loading: sellLoading } = useSellPosition();
-  const totalBet = position.yes_amount + position.no_amount;
-  const side = position.yes_amount > position.no_amount ? "YES" : "NO";
-  const sideAmount = Math.max(position.yes_amount, position.no_amount);
+  const { sell, loading: sellLoading } = useSell();
+  const totalShares = position.yes_shares + position.no_shares;
+  const side = position.yes_shares > position.no_shares ? "YES" : "NO";
+  const sideShares = Math.max(position.yes_shares, position.no_shares);
 
   const handleSell = async () => {
-    const sellSide = position.yes_amount > position.no_amount;
-    const amount = sellSide ? position.yes_amount : position.no_amount;
+    const sellSide = position.yes_shares > position.no_shares;
+    const shares = sellSide ? position.yes_shares : position.no_shares;
     try {
-      await sellPosition(position.market_pubkey, amount, sellSide, position.market_id);
+      await sell(position.market_pubkey, shares, sellSide, position.market_id);
     } catch {
       // error logged in hook
     }
@@ -46,7 +46,7 @@ export function PositionCard({ position, onClaimed }: PositionCardProps) {
               {side}
             </span>
             <span className="text-degen-muted">
-              {(sideAmount / 1e9).toFixed(4)} SOL
+              {(sideShares / 1e9).toFixed(4)} shares
             </span>
             {position.status === "resolved" && (
               <span

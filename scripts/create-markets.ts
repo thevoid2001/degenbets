@@ -14,7 +14,7 @@ import {
 import * as bs58 from "bs58";
 
 const RPC_URL = "https://api.devnet.solana.com";
-const PROGRAM_ID = new PublicKey("5rCyhouLLq4RdFcsPmQDJkx531kptp3JPhhnoenVvq4L");
+const PROGRAM_ID = new PublicKey("CwN2DiAqGTCXXVUCbRTCpD925Aq7e5VTRsLESrXr7SuL");
 const AUTHORITY_KEY = process.env.AUTHORITY_PRIVATE_KEY || "";
 const API_URL = "http://localhost:3001";
 

@@ -22,13 +22,13 @@ pub struct Initialize<'info> {
 pub fn handler(
     ctx: Context<Initialize>,
     treasury: Pubkey,
-    creation_fee_lamports: u64,
+    min_liquidity_lamports: u64,
     treasury_rake_bps: u16,
     creator_rake_bps: u16,
-    min_bet_lamports: u64,
+    min_trade_lamports: u64,
     betting_cutoff_seconds: i64,
     challenge_period_seconds: i64,
-    exit_fee_bps: u16,
+    swap_fee_bps: u16,
 ) -> Result<()> {
     require!(
         treasury_rake_bps <= 10000 && creator_rake_bps <= 10000,
@@ -38,23 +38,23 @@ pub fn handler(
         (treasury_rake_bps as u32 + creator_rake_bps as u32) <= 10000,
         DegenBetsError::InvalidRakeBps
     );
-    require!(exit_fee_bps <= 10000, DegenBetsError::InvalidRakeBps);
-    require!(min_bet_lamports > 0, DegenBetsError::InvalidConfigParam);
+    require!(swap_fee_bps <= 10000, DegenBetsError::InvalidRakeBps);
+    require!(min_trade_lamports > 0, DegenBetsError::InvalidConfigParam);
     require!(betting_cutoff_seconds > 0, DegenBetsError::InvalidConfigParam);
     require!(challenge_period_seconds > 0, DegenBetsError::InvalidConfigParam);
 
     let config = &mut ctx.accounts.config;
     config.authority = ctx.accounts.authority.key();
     config.treasury = treasury;
-    config.creation_fee_lamports = creation_fee_lamports;
+    config.min_liquidity_lamports = min_liquidity_lamports;
     config.treasury_rake_bps = treasury_rake_bps;
     config.creator_rake_bps = creator_rake_bps;
     config.market_count = 0;
     config.paused = false;
-    config.min_bet_lamports = min_bet_lamports;
+    config.min_trade_lamports = min_trade_lamports;
     config.betting_cutoff_seconds = betting_cutoff_seconds;
     config.challenge_period_seconds = challenge_period_seconds;
-    config.exit_fee_bps = exit_fee_bps;
+    config.swap_fee_bps = swap_fee_bps;
     config.bump = ctx.bumps.config;
 
     Ok(())

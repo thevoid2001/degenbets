@@ -7,18 +7,28 @@ pub struct MarketCreated {
     pub question: String,
     pub resolution_source: String,
     pub resolution_timestamp: i64,
-    pub creation_fee_paid: u64,
+    pub liquidity_amount: u64,
     pub market_id: u64,
 }
 
 #[event]
-pub struct BetPlaced {
+pub struct SharesBought {
     pub market: Pubkey,
     pub user: Pubkey,
     pub side: bool,
-    pub amount: u64,
-    pub new_yes_pool: u64,
-    pub new_no_pool: u64,
+    pub sol_amount: u64,
+    pub shares_received: u64,
+    pub price_after: u64,
+}
+
+#[event]
+pub struct SharesSold {
+    pub market: Pubkey,
+    pub user: Pubkey,
+    pub side: bool,
+    pub shares_sold: u64,
+    pub sol_received: u64,
+    pub price_after: u64,
 }
 
 #[event]
@@ -66,17 +76,6 @@ pub struct TreasuryFeeClaimed {
 #[event]
 pub struct PlatformPauseToggled {
     pub paused: bool,
-}
-
-#[event]
-pub struct PositionSold {
-    pub market: Pubkey,
-    pub user: Pubkey,
-    pub side: bool,
-    pub amount: u64,
-    pub exit_fee: u64,
-    pub new_yes_pool: u64,
-    pub new_no_pool: u64,
 }
 
 #[event]

@@ -20,6 +20,7 @@ export function MarketForm() {
   const [category, setCategory] = useState("misc");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [liquidityAmount, setLiquidityAmount] = useState("1");
   const [feeSol, setFeeSol] = useState<number | null>(null);
   const [solPrice, setSolPrice] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
@@ -106,7 +107,8 @@ export function MarketForm() {
     }
 
     // Step 2: Create market on-chain
-    const result = await createMarket(question, source, timestamp);
+    const liquidityLamports = Math.floor((parseFloat(liquidityAmount) || 1) * 1e9);
+    const result = await createMarket(question, source, timestamp, liquidityLamports);
 
     if (result) {
       // Step 3: Sync market to backend database
@@ -145,12 +147,14 @@ export function MarketForm() {
     }
   };
 
+  const liquidityNum = parseFloat(liquidityAmount) || 0;
   const isValid =
     question.length > 0 &&
     question.length <= 256 &&
     source.startsWith("http") &&
     date &&
-    time;
+    time &&
+    liquidityNum >= 0.1;
 
   return (
     <form onSubmit={handleSubmit} className="card space-y-6">
@@ -223,6 +227,23 @@ export function MarketForm() {
         </div>
       </div>
 
+      {/* Initial Liquidity */}
+      <div>
+        <label className="block text-sm font-medium mb-2">Initial Liquidity (SOL)</label>
+        <input
+          type="number"
+          value={liquidityAmount}
+          onChange={(e) => setLiquidityAmount(e.target.value)}
+          placeholder="1.0"
+          className="input-field"
+          min="0.1"
+          step="0.1"
+        />
+        <p className="text-xs text-degen-muted mt-1">
+          SOL deposited into the AMM pool. More liquidity = tighter spreads.
+        </p>
+      </div>
+
       {/* Image Upload */}
       <div>
         <label className="block text-sm font-medium mb-2">
@@ -269,9 +290,21 @@ export function MarketForm() {
             {feeSol !== null
               ? `${feeSol.toFixed(4)} SOL`
               : "Loading..."}
+          </span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-degen-muted">Initial Liquidity:</span>
+          <span className="font-bold">{liquidityNum.toFixed(2)} SOL</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-degen-muted">Total Cost:</span>
+          <span className="font-bold">
+            {feeSol !== null
+              ? `${(feeSol + liquidityNum).toFixed(4)} SOL`
+              : "Loading..."}
             {feeSol !== null && solPrice !== null && (
               <span className="text-degen-muted font-normal ml-1">
-                (~${(feeSol * solPrice).toFixed(0)})
+                (~${((feeSol + liquidityNum) * solPrice).toFixed(0)})
               </span>
             )}
           </span>
@@ -281,7 +314,7 @@ export function MarketForm() {
           <span className="font-bold text-degen-green">1.5% of all volume</span>
         </div>
         <p className="text-xs text-degen-muted">
-          Example: If your market gets 500 SOL in bets, you earn 7.5 SOL
+          Liquidity is deposited into the AMM and returned when the market resolves.
         </p>
       </div>
 
@@ -295,7 +328,7 @@ export function MarketForm() {
           : loading
             ? "Creating Market..."
             : feeSol !== null
-              ? `Create Market — Pay ${feeSol.toFixed(4)} SOL`
+              ? `Create Market — Pay ${(feeSol + liquidityNum).toFixed(4)} SOL`
               : "Create Market"}
       </button>
 

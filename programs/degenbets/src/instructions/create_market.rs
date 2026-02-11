@@ -34,13 +34,6 @@ pub struct CreateMarket<'info> {
     )]
     pub creator_profile: Account<'info, CreatorProfile>,
 
-    /// Treasury wallet to receive creation fee
-    #[account(
-        mut,
-        constraint = treasury.key() == config.treasury,
-    )]
-    pub treasury: SystemAccount<'info>,
-
     pub system_program: Program<'info, System>,
 }
 
@@ -49,6 +42,7 @@ pub fn handler(
     question: String,
     resolution_source: String,
     resolution_timestamp: i64,
+    liquidity_amount: u64,
 ) -> Result<()> {
     // Security: platform pause check
     require!(!ctx.accounts.config.paused, DegenBetsError::PlatformPaused);
@@ -68,15 +62,21 @@ pub fn handler(
         DegenBetsError::ResolutionTooSoon
     );
 
-    // Transfer SOL creation fee to treasury
+    // Validate minimum liquidity
+    require!(
+        liquidity_amount >= ctx.accounts.config.min_liquidity_lamports,
+        DegenBetsError::InsufficientLiquidity
+    );
+
+    // Transfer liquidity SOL from creator to market PDA
     let cpi_ctx = CpiContext::new(
         ctx.accounts.system_program.to_account_info(),
         system_program::Transfer {
             from: ctx.accounts.creator.to_account_info(),
-            to: ctx.accounts.treasury.to_account_info(),
+            to: ctx.accounts.market.to_account_info(),
         },
     );
-    system_program::transfer(cpi_ctx, ctx.accounts.config.creation_fee_lamports)?;
+    system_program::transfer(cpi_ctx, liquidity_amount)?;
 
     // Initialize market
     let market = &mut ctx.accounts.market;
@@ -85,8 +85,14 @@ pub fn handler(
     market.creator = ctx.accounts.creator.key();
     market.question = question.clone();
     market.resolution_source = resolution_source.clone();
-    market.yes_pool = 0;
-    market.no_pool = 0;
+
+    // AMM: initialize 50/50 pool with creator's liquidity
+    market.yes_reserve = liquidity_amount;
+    market.no_reserve = liquidity_amount;
+    market.total_minted = liquidity_amount;
+    market.initial_liquidity = liquidity_amount;
+    market.swap_fee_bps = config.swap_fee_bps;
+
     market.resolution_timestamp = resolution_timestamp;
     market.status = MarketStatus::Open;
     market.outcome = None;
@@ -120,7 +126,7 @@ pub fn handler(
         question,
         resolution_source,
         resolution_timestamp,
-        creation_fee_paid: config.creation_fee_lamports,
+        liquidity_amount,
         market_id: market.market_id,
     });
 

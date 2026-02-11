@@ -1,18 +1,17 @@
 interface OddsBarProps {
-  yesPool: number;
-  noPool: number;
+  yesPrice: number;
+  noPrice: number;
 }
 
-export function OddsBar({ yesPool, noPool }: OddsBarProps) {
-  const total = yesPool + noPool;
-  const yesPct = total > 0 ? Math.round((yesPool / total) * 100) : 50;
-  const noPct = 100 - yesPct;
+export function OddsBar({ yesPrice, noPrice }: OddsBarProps) {
+  const yesPct = Math.round(yesPrice * 100);
+  const noPct = Math.round(noPrice * 100);
 
   return (
     <div className="w-full">
       <div className="flex justify-between text-sm mb-1">
-        <span className="text-degen-green font-medium">YES {yesPct}%</span>
-        <span className="text-degen-red font-medium">NO {noPct}%</span>
+        <span className="text-degen-green font-medium">YES {yesPct}c</span>
+        <span className="text-degen-red font-medium">NO {noPct}c</span>
       </div>
       <div className="w-full h-3 rounded-full overflow-hidden flex bg-degen-dark">
         <div

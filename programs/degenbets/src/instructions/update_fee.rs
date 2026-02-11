@@ -15,6 +15,6 @@ pub struct UpdateFee<'info> {
 }
 
 pub fn handler(ctx: Context<UpdateFee>, new_fee_lamports: u64) -> Result<()> {
-    ctx.accounts.config.creation_fee_lamports = new_fee_lamports;
+    ctx.accounts.config.min_liquidity_lamports = new_fee_lamports;
     Ok(())
 }

@@ -35,8 +35,8 @@ interface CreatorMarketRow {
   market_id: number;
   pubkey: string;
   question: string;
-  yes_pool: string;
-  no_pool: string;
+  yes_reserve: string;
+  no_reserve: string;
   resolution_timestamp: string;
   status: string;
   outcome: boolean | null;
@@ -149,7 +149,7 @@ router.get("/:wallet/markets", async (req: Request, res: Response) => {
     const whereClause = conditions.join(" AND ");
 
     const markets = await query<CreatorMarketRow>(
-      `SELECT market_id, pubkey, question, yes_pool, no_pool,
+      `SELECT market_id, pubkey, question, yes_reserve, no_reserve,
               resolution_timestamp, status, outcome, created_at
        FROM markets
        WHERE ${whereClause}
@@ -170,9 +170,9 @@ router.get("/:wallet/markets", async (req: Request, res: Response) => {
         marketId: m.market_id,
         pubkey: m.pubkey,
         question: m.question,
-        yesPool: m.yes_pool,
-        noPool: m.no_pool,
-        totalVolume: String(BigInt(m.yes_pool) + BigInt(m.no_pool)),
+        yesReserve: m.yes_reserve,
+        noReserve: m.no_reserve,
+        totalVolume: String(BigInt(m.yes_reserve) + BigInt(m.no_reserve)),
         resolutionTimestamp: Number(m.resolution_timestamp),
         status: m.status,
         outcome: m.outcome,

@@ -80,6 +80,12 @@ pub enum DegenBetsError {
     #[msg("Market cannot be closed in current state")]
     MarketNotCloseable,
 
-    #[msg("Sell amount exceeds position")]
-    InsufficientPosition,
+    #[msg("Sell amount exceeds share balance")]
+    InsufficientShares,
+
+    #[msg("Below minimum liquidity")]
+    InsufficientLiquidity,
+
+    #[msg("AMM pool is empty")]
+    EmptyPool,
 }

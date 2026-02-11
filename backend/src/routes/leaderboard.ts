@@ -61,29 +61,29 @@ router.get("/bettors", async (req: Request, res: Response) => {
       `SELECT * FROM (
          SELECT
            p.user_wallet AS wallet,
-           SUM(p.yes_amount + p.no_amount) AS total_wagered,
+           SUM(p.yes_shares + p.no_shares) AS total_wagered,
            SUM(CASE WHEN m.status = 'resolved' AND m.outcome IS NOT NULL AND
-                ((m.outcome = true AND p.yes_amount > 0) OR (m.outcome = false AND p.no_amount > 0))
-                THEN p.yes_amount + p.no_amount ELSE 0 END) AS total_won,
+                ((m.outcome = true AND p.yes_shares > 0) OR (m.outcome = false AND p.no_shares > 0))
+                THEN p.yes_shares + p.no_shares ELSE 0 END) AS total_won,
            SUM(CASE WHEN m.status = 'resolved' AND m.outcome IS NOT NULL AND
-                ((m.outcome = true AND p.yes_amount = 0 AND p.no_amount > 0) OR
-                 (m.outcome = false AND p.no_amount = 0 AND p.yes_amount > 0))
-                THEN p.yes_amount + p.no_amount ELSE 0 END) AS total_lost,
+                ((m.outcome = true AND p.yes_shares = 0 AND p.no_shares > 0) OR
+                 (m.outcome = false AND p.no_shares = 0 AND p.yes_shares > 0))
+                THEN p.yes_shares + p.no_shares ELSE 0 END) AS total_lost,
            COUNT(*)::text AS markets_participated,
            SUM(CASE WHEN m.status = 'resolved' AND m.outcome IS NOT NULL AND
-                ((m.outcome = true AND p.yes_amount > 0) OR (m.outcome = false AND p.no_amount > 0))
+                ((m.outcome = true AND p.yes_shares > 0) OR (m.outcome = false AND p.no_shares > 0))
                 THEN 1 ELSE 0 END)::text AS markets_won,
            SUM(CASE WHEN m.status = 'resolved' AND m.outcome IS NOT NULL AND
-                ((m.outcome = true AND p.yes_amount > 0) OR (m.outcome = false AND p.no_amount > 0))
-                THEN p.yes_amount + p.no_amount ELSE 0 END)
+                ((m.outcome = true AND p.yes_shares > 0) OR (m.outcome = false AND p.no_shares > 0))
+                THEN p.yes_shares + p.no_shares ELSE 0 END)
            - SUM(CASE WHEN m.status = 'resolved' AND m.outcome IS NOT NULL AND
-                ((m.outcome = true AND p.yes_amount = 0 AND p.no_amount > 0) OR
-                 (m.outcome = false AND p.no_amount = 0 AND p.yes_amount > 0))
-                THEN p.yes_amount + p.no_amount ELSE 0 END) AS pnl
+                ((m.outcome = true AND p.yes_shares = 0 AND p.no_shares > 0) OR
+                 (m.outcome = false AND p.no_shares = 0 AND p.yes_shares > 0))
+                THEN p.yes_shares + p.no_shares ELSE 0 END) AS pnl
          FROM positions p
          JOIN markets m ON p.market_id = m.market_id
          GROUP BY p.user_wallet
-         HAVING SUM(p.yes_amount + p.no_amount) > 0
+         HAVING SUM(p.yes_shares + p.no_shares) > 0
        ) sub
        ORDER BY ${sortClause}
        LIMIT $1`,

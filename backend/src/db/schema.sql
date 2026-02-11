@@ -9,8 +9,11 @@ CREATE TABLE IF NOT EXISTS markets (
     creator             VARCHAR(64) NOT NULL,                -- creator wallet pubkey
     question            TEXT NOT NULL,
     resolution_source   TEXT NOT NULL,                       -- URL for AI resolution
-    yes_pool            BIGINT NOT NULL DEFAULT 0,           -- lamports in YES pool
-    no_pool             BIGINT NOT NULL DEFAULT 0,           -- lamports in NO pool
+    yes_reserve         BIGINT NOT NULL DEFAULT 0,           -- YES shares in AMM reserve
+    no_reserve          BIGINT NOT NULL DEFAULT 0,           -- NO shares in AMM reserve
+    total_minted        BIGINT NOT NULL DEFAULT 0,           -- total complete sets minted (= vault SOL)
+    initial_liquidity   BIGINT NOT NULL DEFAULT 0,           -- creator's locked liquidity
+    swap_fee_bps        INT NOT NULL DEFAULT 30,             -- per-market swap fee snapshot
     resolution_timestamp BIGINT NOT NULL,                    -- unix epoch seconds
     status              VARCHAR(16) NOT NULL DEFAULT 'open', -- open | resolved | voided
     outcome             BOOLEAN,                             -- NULL until resolved; TRUE=yes, FALSE=no
@@ -31,8 +34,8 @@ CREATE TABLE IF NOT EXISTS positions (
     market_id   BIGINT NOT NULL REFERENCES markets(market_id),
     pubkey      VARCHAR(64) NOT NULL UNIQUE,     -- position PDA address
     user_wallet VARCHAR(64) NOT NULL,
-    yes_amount  BIGINT NOT NULL DEFAULT 0,       -- lamports bet on YES
-    no_amount   BIGINT NOT NULL DEFAULT 0,       -- lamports bet on NO
+    yes_shares  BIGINT NOT NULL DEFAULT 0,       -- YES outcome shares
+    no_shares   BIGINT NOT NULL DEFAULT 0,       -- NO outcome shares
     claimed     BOOLEAN NOT NULL DEFAULT FALSE,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()

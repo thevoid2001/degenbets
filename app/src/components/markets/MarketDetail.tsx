@@ -16,7 +16,7 @@ interface MarketDetailProps {
 
 export function MarketDetail({ market }: MarketDetailProps) {
   const { connection } = useConnection();
-  const totalPool = Number(market.yes_pool) + Number(market.no_pool);
+  const totalReserve = Number(market.yes_reserve) + Number(market.no_reserve);
 
   const [challengeEnd, setChallengeEnd] = useState<number | null>(null);
 
@@ -44,8 +44,8 @@ export function MarketDetail({ market }: MarketDetailProps) {
         offset += 4 + questionLen; // question string (len prefix + data)
         const sourceLen = data.readUInt32LE(offset);
         offset += 4 + sourceLen; // resolution_source string
-        offset += 8; // yes_pool
-        offset += 8; // no_pool
+        offset += 8; // yes_reserve
+        offset += 8; // no_reserve
         offset += 8; // resolution_timestamp
         offset += 1; // status (enum)
         // Option<bool> outcome — 1 byte tag + 1 byte value if Some
@@ -104,12 +104,12 @@ export function MarketDetail({ market }: MarketDetailProps) {
         </div>
       )}
 
-      <OddsBar yesPool={market.yes_pool} noPool={market.no_pool} />
+      <OddsBar yesPrice={market.yes_price} noPrice={market.no_price} />
 
       <div className="grid grid-cols-3 gap-4 mt-6">
         <div className="stat-box">
-          <p className="text-degen-muted text-xs mb-1">Total Pool</p>
-          <p className="text-lg font-bold">{(totalPool / 1e9).toFixed(2)} SOL</p>
+          <p className="text-degen-muted text-xs mb-1">Liquidity</p>
+          <p className="text-lg font-bold">{(totalReserve / 1e9).toFixed(2)} SOL</p>
         </div>
         <div className="stat-box">
           <p className="text-degen-muted text-xs mb-1">Resolves</p>

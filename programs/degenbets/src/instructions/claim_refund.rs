@@ -34,9 +34,12 @@ pub fn handler(ctx: Context<ClaimRefund>) -> Result<()> {
     require!(market.status == MarketStatus::Voided, DegenBetsError::MarketNotVoided);
     require!(!position.claimed, DegenBetsError::AlreadyClaimed);
 
-    let refund_amount = position.yes_amount
-        .checked_add(position.no_amount)
+    // AMM void refund: each share (YES or NO) is worth 0.5 SOL equivalent
+    // total_shares / 2 = SOL refund
+    let total_shares = position.yes_shares
+        .checked_add(position.no_shares)
         .ok_or(DegenBetsError::MathOverflow)?;
+    let refund_amount = total_shares / 2;
 
     if refund_amount > 0 {
         // Rent-exemption guard

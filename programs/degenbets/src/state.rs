@@ -4,15 +4,15 @@ use anchor_lang::prelude::*;
 pub struct Config {
     pub authority: Pubkey,
     pub treasury: Pubkey,
-    pub creation_fee_lamports: u64,
+    pub min_liquidity_lamports: u64,
     pub treasury_rake_bps: u16,
     pub creator_rake_bps: u16,
     pub market_count: u64,
     pub paused: bool,
-    pub min_bet_lamports: u64,
+    pub min_trade_lamports: u64,
     pub betting_cutoff_seconds: i64,
     pub challenge_period_seconds: i64,
-    pub exit_fee_bps: u16,
+    pub swap_fee_bps: u16,
     pub bump: u8,
 }
 
@@ -25,8 +25,14 @@ pub struct Market {
     pub creator: Pubkey,
     pub question: String,
     pub resolution_source: String,
-    pub yes_pool: u64,
-    pub no_pool: u64,
+
+    // AMM state
+    pub yes_reserve: u64,
+    pub no_reserve: u64,
+    pub total_minted: u64,
+    pub initial_liquidity: u64,
+    pub swap_fee_bps: u16,
+
     pub resolution_timestamp: i64,
     pub status: MarketStatus,
     pub outcome: Option<bool>,
@@ -48,8 +54,11 @@ impl Market {
         + 32                      // creator
         + 4 + Self::MAX_QUESTION_LEN  // question (string prefix + data)
         + 4 + Self::MAX_SOURCE_LEN    // resolution_source
-        + 8                       // yes_pool
-        + 8                       // no_pool
+        + 8                       // yes_reserve
+        + 8                       // no_reserve
+        + 8                       // total_minted
+        + 8                       // initial_liquidity
+        + 2                       // swap_fee_bps
         + 8                       // resolution_timestamp
         + 1                       // status
         + 1 + 1                   // outcome (Option<bool>)
@@ -75,8 +84,8 @@ pub enum MarketStatus {
 pub struct Position {
     pub market: Pubkey,
     pub user: Pubkey,
-    pub yes_amount: u64,
-    pub no_amount: u64,
+    pub yes_shares: u64,
+    pub no_shares: u64,
     pub claimed: bool,
     pub bump: u8,
 }

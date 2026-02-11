@@ -36,15 +36,24 @@ function getPositionPda(market: PublicKey, user: PublicKey): PublicKey {
 }
 
 /**
- * Parse Market account data to extract pool values.
+ * Parse Market account data to extract AMM state.
  * Layout after 8-byte discriminator:
  *   32 bytes: creator
  *   4 + N bytes: question (Borsh string)
  *   4 + M bytes: resolution_source (Borsh string)
- *   8 bytes: yes_pool
- *   8 bytes: no_pool
+ *   8 bytes: yes_reserve
+ *   8 bytes: no_reserve
+ *   8 bytes: total_minted
+ *   8 bytes: initial_liquidity
+ *   2 bytes: swap_fee_bps
  */
-function parseMarketPools(data: Buffer): { yesPool: bigint; noPool: bigint } {
+function parseMarketState(data: Buffer): {
+  yesReserve: bigint;
+  noReserve: bigint;
+  totalMinted: bigint;
+  initialLiquidity: bigint;
+  swapFeeBps: number;
+} {
   let offset = 8; // skip discriminator
   offset += 32; // skip creator
 
@@ -56,11 +65,17 @@ function parseMarketPools(data: Buffer): { yesPool: bigint; noPool: bigint } {
   const sLen = data.readUInt32LE(offset);
   offset += 4 + sLen;
 
-  const yesPool = data.readBigUInt64LE(offset);
+  const yesReserve = data.readBigUInt64LE(offset);
   offset += 8;
-  const noPool = data.readBigUInt64LE(offset);
+  const noReserve = data.readBigUInt64LE(offset);
+  offset += 8;
+  const totalMinted = data.readBigUInt64LE(offset);
+  offset += 8;
+  const initialLiquidity = data.readBigUInt64LE(offset);
+  offset += 8;
+  const swapFeeBps = data.readUInt16LE(offset);
 
-  return { yesPool, noPool };
+  return { yesReserve, noReserve, totalMinted, initialLiquidity, swapFeeBps };
 }
 
 /**
@@ -68,19 +83,19 @@ function parseMarketPools(data: Buffer): { yesPool: bigint; noPool: bigint } {
  * Layout after 8-byte discriminator:
  *   32 bytes: market pubkey
  *   32 bytes: user pubkey
- *   8 bytes: yes_amount
- *   8 bytes: no_amount
+ *   8 bytes: yes_shares
+ *   8 bytes: no_shares
  *   1 byte: claimed
  */
 function parsePosition(data: Buffer): {
-  yesAmount: bigint;
-  noAmount: bigint;
+  yesShares: bigint;
+  noShares: bigint;
   claimed: boolean;
 } {
-  const yesAmount = data.readBigUInt64LE(72);
-  const noAmount = data.readBigUInt64LE(80);
+  const yesShares = data.readBigUInt64LE(72);
+  const noShares = data.readBigUInt64LE(80);
   const claimed = data[88] === 1;
-  return { yesAmount, noAmount, claimed };
+  return { yesShares, noShares, claimed };
 }
 
 router.post("/", async (req: Request, res: Response) => {
@@ -108,33 +123,35 @@ router.post("/", async (req: Request, res: Response) => {
       connection.getAccountInfo(positionPda),
     ]);
 
-    // Update market pools
+    // Update market AMM state
     if (marketInfo && marketInfo.data.length > 60) {
-      const { yesPool, noPool } = parseMarketPools(marketInfo.data);
+      const { yesReserve, noReserve, totalMinted, initialLiquidity, swapFeeBps } = parseMarketState(marketInfo.data);
       await query(
-        `UPDATE markets SET yes_pool = $1, no_pool = $2, updated_at = NOW()
-         WHERE market_id = $3`,
-        [yesPool.toString(), noPool.toString(), mId]
+        `UPDATE markets SET yes_reserve = $1, no_reserve = $2, total_minted = $3,
+         initial_liquidity = $4, swap_fee_bps = $5, updated_at = NOW()
+         WHERE market_id = $6`,
+        [yesReserve.toString(), noReserve.toString(), totalMinted.toString(),
+         initialLiquidity.toString(), swapFeeBps, mId]
       );
     }
 
     // Upsert position
     if (positionInfo && positionInfo.data.length >= 89) {
-      const { yesAmount, noAmount, claimed } = parsePosition(positionInfo.data);
+      const { yesShares, noShares, claimed } = parsePosition(positionInfo.data);
       await query(
-        `INSERT INTO positions (market_id, pubkey, user_wallet, yes_amount, no_amount, claimed)
+        `INSERT INTO positions (market_id, pubkey, user_wallet, yes_shares, no_shares, claimed)
          VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (pubkey) DO UPDATE SET
-           yes_amount = EXCLUDED.yes_amount,
-           no_amount = EXCLUDED.no_amount,
+           yes_shares = EXCLUDED.yes_shares,
+           no_shares = EXCLUDED.no_shares,
            claimed = EXCLUDED.claimed,
            updated_at = NOW()`,
         [
           mId,
           positionPda.toBase58(),
           userWallet,
-          yesAmount.toString(),
-          noAmount.toString(),
+          yesShares.toString(),
+          noShares.toString(),
           claimed,
         ]
       );

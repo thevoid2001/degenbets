@@ -42,18 +42,17 @@ pub fn handler(ctx: Context<ResolveMarket>, outcome: bool) -> Result<()> {
         DegenBetsError::MarketNotReady
     );
 
-    let total_pot = market.yes_pool
-        .checked_add(market.no_pool)
-        .ok_or(DegenBetsError::MathOverflow)?;
+    // In AMM model, total pot = total_minted (vault balance)
+    let total_pot = market.total_minted;
 
     // Calculate fees using u128 for safety
     let treasury_fee = ((total_pot as u128)
-        .checked_mul(ctx.accounts.config.treasury_rake_bps as u128)
+        .checked_mul(market.treasury_rake_bps as u128)
         .ok_or(DegenBetsError::MathOverflow)?
         / 10000u128) as u64;
 
     let creator_fee = ((total_pot as u128)
-        .checked_mul(ctx.accounts.config.creator_rake_bps as u128)
+        .checked_mul(market.creator_rake_bps as u128)
         .ok_or(DegenBetsError::MathOverflow)?
         / 10000u128) as u64;
 
