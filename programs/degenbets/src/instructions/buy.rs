@@ -51,6 +51,16 @@ pub fn handler(ctx: Context<Buy>, amount: u64, side: bool) -> Result<()> {
         DegenBetsError::BettingClosed
     );
 
+    // Enforce one side per wallet: can't buy YES if holding NO, and vice versa
+    let position = &ctx.accounts.position;
+    if position.market != Pubkey::default() {
+        if side {
+            require!(position.no_shares == 0, DegenBetsError::OppositePositionExists);
+        } else {
+            require!(position.yes_shares == 0, DegenBetsError::OppositePositionExists);
+        }
+    }
+
     // Transfer SOL from user to market PDA
     system_program::transfer(
         CpiContext::new(

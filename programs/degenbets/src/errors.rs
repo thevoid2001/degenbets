@@ -88,4 +88,7 @@ pub enum DegenBetsError {
 
     #[msg("AMM pool is empty")]
     EmptyPool,
+
+    #[msg("Sell your existing position before buying the opposite side")]
+    OppositePositionExists,
 }

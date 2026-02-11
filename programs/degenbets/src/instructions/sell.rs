@@ -58,35 +58,18 @@ pub fn handler(ctx: Context<Sell>, shares: u64, side: bool) -> Result<()> {
         require!(ctx.accounts.position.no_shares >= shares, DegenBetsError::InsufficientShares);
     }
 
-    // First, burn any matched pairs the user has (free SOL, no AMM interaction)
+    // Sell shares through the AMM (users can only hold one side)
     let position = &mut ctx.accounts.position;
-    let mut matched_sol: u64 = 0;
-    let matched = position.yes_shares.min(position.no_shares);
-    if matched > 0 {
-        position.yes_shares -= matched;
-        position.no_shares -= matched;
-        matched_sol = matched;
-    }
-
-    // Remaining shares to sell after matching
-    let remaining_to_sell = shares.saturating_sub(matched);
-
     let market = &mut ctx.accounts.market;
-    let mut total_sol_out = matched_sol;
 
-    if remaining_to_sell > 0 {
-        let (sol_out, new_ry, new_rn) = if side {
-            math::calc_sell_yes(remaining_to_sell, market.yes_reserve, market.no_reserve, market.swap_fee_bps)?
-        } else {
-            math::calc_sell_no(remaining_to_sell, market.yes_reserve, market.no_reserve, market.swap_fee_bps)?
-        };
+    let (total_sol_out, new_ry, new_rn) = if side {
+        math::calc_sell_yes(shares, market.yes_reserve, market.no_reserve, market.swap_fee_bps)?
+    } else {
+        math::calc_sell_no(shares, market.yes_reserve, market.no_reserve, market.swap_fee_bps)?
+    };
 
-        market.yes_reserve = new_ry;
-        market.no_reserve = new_rn;
-        total_sol_out = total_sol_out
-            .checked_add(sol_out)
-            .ok_or(DegenBetsError::MathOverflow)?;
-    }
+    market.yes_reserve = new_ry;
+    market.no_reserve = new_rn;
 
     // Update total_minted (decreased by SOL leaving the vault)
     market.total_minted = market.total_minted
@@ -109,14 +92,14 @@ pub fn handler(ctx: Context<Sell>, shares: u64, side: bool) -> Result<()> {
     **market.to_account_info().try_borrow_mut_lamports()? -= total_sol_out;
     **ctx.accounts.user.to_account_info().try_borrow_mut_lamports()? += total_sol_out;
 
-    // Update position (deduct the remaining shares sold via AMM)
+    // Update position (deduct sold shares)
     if side {
         position.yes_shares = position.yes_shares
-            .checked_sub(remaining_to_sell)
+            .checked_sub(shares)
             .ok_or(DegenBetsError::MathOverflow)?;
     } else {
         position.no_shares = position.no_shares
-            .checked_sub(remaining_to_sell)
+            .checked_sub(shares)
             .ok_or(DegenBetsError::MathOverflow)?;
     }
 

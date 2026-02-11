@@ -16,7 +16,7 @@ interface MarketDetailProps {
 
 export function MarketDetail({ market }: MarketDetailProps) {
   const { connection } = useConnection();
-  const totalReserve = Number(market.yes_reserve) + Number(market.no_reserve);
+  const totalLiquidity = Number(market.total_minted) || 0;
 
   const [challengeEnd, setChallengeEnd] = useState<number | null>(null);
 
@@ -108,8 +108,8 @@ export function MarketDetail({ market }: MarketDetailProps) {
 
       <div className="grid grid-cols-3 gap-4 mt-6">
         <div className="stat-box">
-          <p className="text-degen-muted text-xs mb-1">Liquidity</p>
-          <p className="text-lg font-bold">{(totalReserve / 1e9).toFixed(2)} SOL</p>
+          <p className="text-degen-muted text-xs mb-1">Volume</p>
+          <p className="text-lg font-bold">{(totalLiquidity / 1e9).toFixed(2)} SOL</p>
         </div>
         <div className="stat-box">
           <p className="text-degen-muted text-xs mb-1">Resolves</p>

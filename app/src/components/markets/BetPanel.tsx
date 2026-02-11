@@ -161,8 +161,11 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
   };
 
   const belowMinBet = minBetLamports > 0 && amountLamports > 0 && amountLamports < minBetLamports;
+  const hasYes = userYesShares > 0;
+  const hasNo = userNoShares > 0;
+  const lockedSide = hasYes ? true : hasNo ? false : null; // which side user is locked into
   const betDisabled = !publicKey || side === null || amountNum <= 0 || loading || paused || isBettingClosed || belowMinBet;
-  const hasPosition = userYesShares > 0 || userNoShares > 0;
+  const hasPosition = hasYes || hasNo;
   const canSell = hasPosition && !isBettingClosed && !paused;
 
   return (
@@ -184,25 +187,37 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
       <div className="grid grid-cols-2 gap-3 mb-6">
         <button
           onClick={() => setSide(true)}
+          disabled={lockedSide === false}
           className={`py-3 rounded-lg font-bold transition-all ${
-            side === true
-              ? "bg-degen-green/30 text-degen-green border-2 border-degen-green"
-              : "bg-degen-card border border-degen-border text-degen-muted hover:text-degen-green"
+            lockedSide === false
+              ? "bg-degen-card border border-degen-border text-degen-muted/30 cursor-not-allowed"
+              : side === true
+                ? "bg-degen-green/30 text-degen-green border-2 border-degen-green"
+                : "bg-degen-card border border-degen-border text-degen-muted hover:text-degen-green"
           }`}
         >
           YES {yesPct}c
         </button>
         <button
           onClick={() => setSide(false)}
+          disabled={lockedSide === true}
           className={`py-3 rounded-lg font-bold transition-all ${
-            side === false
-              ? "bg-degen-red/30 text-degen-red border-2 border-degen-red"
-              : "bg-degen-card border border-degen-border text-degen-muted hover:text-degen-red"
+            lockedSide === true
+              ? "bg-degen-card border border-degen-border text-degen-muted/30 cursor-not-allowed"
+              : side === false
+                ? "bg-degen-red/30 text-degen-red border-2 border-degen-red"
+                : "bg-degen-card border border-degen-border text-degen-muted hover:text-degen-red"
           }`}
         >
           NO {noPct}c
         </button>
       </div>
+
+      {lockedSide !== null && (
+        <p className="text-xs text-degen-muted mb-3 -mt-3">
+          You hold {lockedSide ? "YES" : "NO"} shares. Sell first to switch sides.
+        </p>
+      )}
 
       <div className="mb-4">
         <label className="text-sm text-degen-muted mb-2 block">Amount (SOL)</label>
