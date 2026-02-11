@@ -130,7 +130,18 @@ export function MarketForm() {
         console.error("Failed to sync market to backend:", err);
       }
 
-      // Step 4: Associate image with market pubkey
+      // Step 4: Sync on-chain AMM state (reserves, total_minted) to DB
+      try {
+        await fetch(`${API_URL}/api/sync`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ marketId: result.marketId, userWallet: publicKey.toBase58() }),
+        });
+      } catch (err) {
+        console.error("Failed to sync on-chain state:", err);
+      }
+
+      // Step 5: Associate image with market pubkey
       if (uploadedImageUrl) {
         try {
           await fetch(`${API_URL}/api/markets/${result.pubkey}/image`, {
