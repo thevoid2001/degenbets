@@ -252,46 +252,86 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
       </button>
 
       {/* Sell Position Section */}
-      {hasPosition && (
+      {hasPosition && (() => {
+        const yesSharesSol = userYesShares / 1e9;
+        const noSharesSol = userNoShares / 1e9;
+        const yesValue = yesSharesSol * yesPrice;
+        const noValue = noSharesSol * noPrice;
+        const totalValue = yesValue + noValue;
+        const yesPayout = yesSharesSol * PAYOUT_PER_SHARE;
+        const noPayout = noSharesSol * PAYOUT_PER_SHARE;
+
+        return (
         <div className="mt-6 pt-6 border-t border-degen-border">
-          <h4 className="text-sm font-bold mb-3">Your Shares</h4>
-          <div className="space-y-3">
+          <h4 className="text-sm font-bold mb-3">Your Position</h4>
+
+          {/* Position value summary */}
+          <div className="mb-3 p-3 bg-degen-dark rounded-lg space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-degen-muted">Current value:</span>
+              <span className="font-bold">{totalValue.toFixed(4)} SOL</span>
+            </div>
             {userYesShares > 0 && (
-              <div className="flex items-center justify-between p-3 bg-degen-dark rounded-lg">
-                <div>
-                  <span className="text-degen-green font-bold text-sm">YES</span>
-                  <span className="text-sm text-degen-muted ml-2">
-                    {(userYesShares / 1e9).toFixed(4)} shares
-                  </span>
-                </div>
-                {canSell && (
-                  <button
-                    onClick={() => handleSell(true)}
-                    disabled={sellLoading}
-                    className="px-3 py-1 text-xs font-bold rounded bg-degen-red/20 text-degen-red border border-degen-red/30 hover:bg-degen-red/30 transition-colors"
-                  >
-                    {sellLoading ? "Selling..." : "Sell"}
-                  </button>
-                )}
+              <div className="flex justify-between">
+                <span className="text-degen-muted">If YES wins:</span>
+                <span className="font-bold text-degen-green">{yesPayout.toFixed(4)} SOL</span>
               </div>
             )}
             {userNoShares > 0 && (
-              <div className="flex items-center justify-between p-3 bg-degen-dark rounded-lg">
-                <div>
-                  <span className="text-degen-red font-bold text-sm">NO</span>
-                  <span className="text-sm text-degen-muted ml-2">
-                    {(userNoShares / 1e9).toFixed(4)} shares
-                  </span>
+              <div className="flex justify-between">
+                <span className="text-degen-muted">If NO wins:</span>
+                <span className="font-bold text-degen-green">{noPayout.toFixed(4)} SOL</span>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {userYesShares > 0 && (
+              <div className="p-3 bg-degen-dark rounded-lg">
+                <div className="flex items-center justify-between mb-1">
+                  <div>
+                    <span className="text-degen-green font-bold text-sm">YES</span>
+                    <span className="text-sm text-degen-muted ml-2">
+                      {yesSharesSol.toFixed(4)} shares
+                    </span>
+                  </div>
+                  {canSell && (
+                    <button
+                      onClick={() => handleSell(true)}
+                      disabled={sellLoading}
+                      className="px-3 py-1 text-xs font-bold rounded bg-degen-red/20 text-degen-red border border-degen-red/30 hover:bg-degen-red/30 transition-colors"
+                    >
+                      {sellLoading ? "Selling..." : `Sell for ~${yesValue.toFixed(4)} SOL`}
+                    </button>
+                  )}
                 </div>
-                {canSell && (
-                  <button
-                    onClick={() => handleSell(false)}
-                    disabled={sellLoading}
-                    className="px-3 py-1 text-xs font-bold rounded bg-degen-red/20 text-degen-red border border-degen-red/30 hover:bg-degen-red/30 transition-colors"
-                  >
-                    {sellLoading ? "Selling..." : "Sell"}
-                  </button>
-                )}
+                <div className="text-xs text-degen-muted">
+                  Value: {yesValue.toFixed(4)} SOL @ {(yesPrice * 100).toFixed(1)}c/share
+                </div>
+              </div>
+            )}
+            {userNoShares > 0 && (
+              <div className="p-3 bg-degen-dark rounded-lg">
+                <div className="flex items-center justify-between mb-1">
+                  <div>
+                    <span className="text-degen-red font-bold text-sm">NO</span>
+                    <span className="text-sm text-degen-muted ml-2">
+                      {noSharesSol.toFixed(4)} shares
+                    </span>
+                  </div>
+                  {canSell && (
+                    <button
+                      onClick={() => handleSell(false)}
+                      disabled={sellLoading}
+                      className="px-3 py-1 text-xs font-bold rounded bg-degen-red/20 text-degen-red border border-degen-red/30 hover:bg-degen-red/30 transition-colors"
+                    >
+                      {sellLoading ? "Selling..." : `Sell for ~${noValue.toFixed(4)} SOL`}
+                    </button>
+                  )}
+                </div>
+                <div className="text-xs text-degen-muted">
+                  Value: {noValue.toFixed(4)} SOL @ {(noPrice * 100).toFixed(1)}c/share
+                </div>
               </div>
             )}
             {canSell && (
@@ -306,18 +346,17 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
                   placeholder="All"
                   className="input-field text-sm"
                   min="0"
-                  step="0.01"
+                  step="any"
                 />
-                {exitFeeBps > 0 && (
-                  <p className="text-xs text-degen-muted mt-1">
-                    Exit fee: {exitFeeBps / 100}%
-                  </p>
-                )}
+                <p className="text-xs text-degen-muted mt-1">
+                  Swap fee: {exitFeeBps / 100}% · Actual SOL received may vary due to slippage
+                </p>
               </div>
             )}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {comment && (
         <div className="mt-4 p-3 bg-degen-dark rounded-lg border border-degen-border">
