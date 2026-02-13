@@ -9,7 +9,6 @@ import creatorsRouter from "./routes/creators";
 import leaderboardRouter from "./routes/leaderboard";
 import syncRouter from "./routes/sync";
 import { resolveReadyMarkets } from "./services/resolver";
-import { updateCreationFee } from "./services/feeUpdater";
 
 dotenv.config();
 
@@ -58,17 +57,6 @@ cron.schedule("*/5 * * * *", async () => {
   }
 });
 
-// Fee update cron - every 30 minutes
-cron.schedule("*/30 * * * *", async () => {
-  console.log("[cron] Updating creation fee...");
-  try {
-    const result = await updateCreationFee();
-    console.log("[cron] Fee update:", result);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[cron] Fee update error:", message);
-  }
-});
 
 app.listen(PORT, () => {
   console.log(`[server] DegenBets backend running on port ${PORT}`);

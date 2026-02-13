@@ -11,8 +11,8 @@ const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" }
 const orbitron = Orbitron({ subsets: ["latin"], variable: "--font-display", weight: ["400", "700", "900"] });
 
 export const metadata: Metadata = {
-  title: "DegenBets - PvP Prediction Markets on Solana",
-  description: "Create markets on anything. Bet against other degens. AI settles it.",
+  title: "DegenBets - Prediction Market Launchpad on Solana",
+  description: "Create. Bet. Earn. Launch prediction markets on anything, powered by Solana.",
   icons: {
     icon: "/degenbets-neon-icon.svg",
     apple: "/degenbets-neon-icon.svg",

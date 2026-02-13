@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { MarketDetail } from "@/components/markets/MarketDetail";
 import { BetPanel } from "@/components/markets/BetPanel";
+import { ClaimPanel } from "@/components/markets/ClaimPanel";
 import { DealerChat } from "@/components/dealer/DealerChat";
 import { useMarket } from "@/hooks/useMarket";
 
@@ -76,13 +77,7 @@ export default function MarketPageClient() {
         {market.status === "open" ? (
           <BetPanel market={market} onTxSuccess={refetch} />
         ) : (
-          <div className="card">
-            <p className="text-center text-degen-muted">
-              {market.status === "resolved"
-                ? `Resolved: ${market.outcome ? "YES" : "NO"}`
-                : "Market Voided"}
-            </p>
-          </div>
+          <ClaimPanel market={market} onTxSuccess={refetch} />
         )}
       </div>
     </div>

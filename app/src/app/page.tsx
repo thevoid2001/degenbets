@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MarketCard } from "@/components/markets/MarketCard";
 import { useMarkets } from "@/hooks/useMarkets";
+import { SplashScreen } from "@/components/common/SplashScreen";
 
 const CATEGORIES = [
   { value: "all", label: "All" },
@@ -17,15 +18,32 @@ export default function Home() {
   const [filter, setFilter] = useState<"all" | "open" | "resolved" | "voided">("open");
   const [category, setCategory] = useState("all");
   const { markets, loading } = useMarkets(filter, category);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const seen = sessionStorage.getItem("degenbets-splash-seen");
+    if (seen) {
+      setShowSplash(false);
+    }
+  }, []);
+
+  const handleEnter = () => {
+    sessionStorage.setItem("degenbets-splash-seen", "1");
+    setShowSplash(false);
+  };
+
+  if (showSplash) {
+    return <SplashScreen onEnter={handleEnter} />;
+  }
 
   return (
     <div>
       <div className="text-center mb-12">
         <h1 className="text-6xl sm:text-7xl font-black tracking-tight mb-4 neon-text leading-tight">
-          PvP Prediction Markets
+          Create. Bet. Earn.
         </h1>
         <p className="text-degen-text-secondary text-lg max-w-xl mx-auto">
-          Create markets on anything. Bet against other degens. AI settles it.
+          Prediction Market Launchpad on Solana
         </p>
       </div>
 

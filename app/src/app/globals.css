@@ -149,3 +149,296 @@ body::before {
   background-clip: text;
   filter: drop-shadow(0 0 30px rgba(var(--degen-accent), 0.3));
 }
+
+/* ===== Splash Screen ===== */
+.splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #050508;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.splash-exit {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+/* Animated grid background */
+.splash-grid {
+  position: absolute;
+  inset: -50%;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridMove 20s linear infinite;
+}
+
+@keyframes gridMove {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(60px, 60px) rotate(1deg); }
+}
+
+/* Glow orbs */
+.splash-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+
+.splash-orb-1 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(0, 255, 136, 0.3), transparent 70%);
+  top: -10%;
+  left: -5%;
+  animation-delay: 0s;
+}
+
+.splash-orb-2 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.25), transparent 70%);
+  bottom: -10%;
+  right: -5%;
+  animation-delay: -3s;
+}
+
+.splash-orb-3 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(191, 0, 255, 0.2), transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: -5s;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.1); }
+  50% { transform: translate(-20px, 30px) scale(0.9); }
+  75% { transform: translate(20px, 20px) scale(1.05); }
+}
+
+.splash-orb-3 {
+  animation-name: orbFloatCenter;
+}
+
+@keyframes orbFloatCenter {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  25% { transform: translate(-45%, -55%) scale(1.15); }
+  50% { transform: translate(-55%, -45%) scale(0.9); }
+  75% { transform: translate(-48%, -52%) scale(1.05); }
+}
+
+/* Content container */
+.splash-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+/* Icon */
+.splash-icon {
+  position: relative;
+  opacity: 0;
+  transform: scale(0.5) rotateY(90deg);
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.splash-icon-visible {
+  opacity: 1;
+  transform: scale(1) rotateY(0deg);
+}
+
+.splash-icon-inner {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.5)) drop-shadow(0 0 40px rgba(0, 212, 255, 0.3));
+  animation: iconGlow 3s ease-in-out infinite;
+}
+
+@keyframes iconGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.5)) drop-shadow(0 0 40px rgba(0, 212, 255, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 30px rgba(0, 255, 136, 0.7)) drop-shadow(0 0 60px rgba(0, 212, 255, 0.5));
+  }
+}
+
+/* Pulse ring */
+.splash-pulse-ring {
+  position: absolute;
+  inset: -20px;
+  border-radius: 40px;
+  border: 2px solid rgba(0, 212, 255, 0.3);
+  opacity: 0;
+}
+
+.splash-pulse-active {
+  animation: pulseRing 2s ease-out 0.5s;
+}
+
+@keyframes pulseRing {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+/* Title - letter by letter */
+.splash-title {
+  font-family: var(--font-display), 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 3.5rem;
+  letter-spacing: 0.15em;
+  display: flex;
+  gap: 2px;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .splash-title {
+    font-size: 5rem;
+    gap: 4px;
+  }
+}
+
+.splash-letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(40px) rotateX(90deg);
+  background: linear-gradient(135deg, #00ff88, #00d4ff, #bf00ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.4));
+}
+
+.splash-title-visible .splash-letter {
+  animation: letterReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes letterReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) rotateX(90deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-5px) rotateX(-10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+  }
+}
+
+/* Tagline */
+.splash-tagline {
+  font-size: 1.1rem;
+  color: rgba(148, 163, 184, 0.8);
+  letter-spacing: 0.05em;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+
+.splash-tagline-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Enter button */
+.splash-enter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 36px;
+  font-family: var(--font-display), 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #000;
+  background: linear-gradient(135deg, #00ff88, #00d4ff);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.splash-enter::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #00ff88, #00d4ff, #bf00ff);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.splash-enter-visible {
+  opacity: 1;
+  transform: translateY(0);
+  animation: btnPulse 2s ease-in-out infinite 1s;
+}
+
+.splash-enter:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.4), 0 0 60px rgba(0, 212, 255, 0.2);
+}
+
+.splash-enter:active {
+  transform: translateY(0) scale(0.98);
+}
+
+@keyframes btnPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.2), 0 0 30px rgba(0, 212, 255, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(0, 255, 136, 0.4), 0 0 50px rgba(0, 212, 255, 0.2);
+  }
+}
+
+/* Skip button */
+.splash-skip {
+  position: absolute;
+  bottom: 32px;
+  right: 32px;
+  font-size: 0.85rem;
+  color: rgba(148, 163, 184, 0.4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: color 0.2s ease;
+  z-index: 2;
+}
+
+.splash-skip:hover {
+  color: rgba(148, 163, 184, 0.8);
+}
