@@ -12,7 +12,7 @@ import { query } from "../db/pool";
 const router = Router();
 
 const PROGRAM_ID = new PublicKey(
-  process.env.PROGRAM_ID || "5rCyhouLLq4RdFcsPmQDJkx531kptp3JPhhnoenVvq4L"
+  process.env.PROGRAM_ID || "8pEfVsAfjmuCLqoH2T5uXQHvUxg3f1sYLjw8mLJydXtW"
 );
 const RPC_URL = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
 const connection = new Connection(RPC_URL, "confirmed");

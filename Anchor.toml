@@ -7,10 +7,10 @@ skip-lint = false
 resolution = true
 
 [programs.localnet]
-degenbets = "CwN2DiAqGTCXXVUCbRTCpD925Aq7e5VTRsLESrXr7SuL"
+degenbets = "8pEfVsAfjmuCLqoH2T5uXQHvUxg3f1sYLjw8mLJydXtW"
 
 [programs.devnet]
-degenbets = "CwN2DiAqGTCXXVUCbRTCpD925Aq7e5VTRsLESrXr7SuL"
+degenbets = "8pEfVsAfjmuCLqoH2T5uXQHvUxg3f1sYLjw8mLJydXtW"
 
 [registry]
 url = "https://api.apr.dev"
