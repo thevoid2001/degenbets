@@ -107,15 +107,24 @@ body::before {
 
 /* Nav pills */
 .nav-pill {
-  @apply px-5 py-2 rounded-lg text-base font-display font-bold tracking-wide
-    text-degen-accent border border-transparent
+  @apply px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-display font-bold tracking-wide
+    text-degen-accent border border-transparent whitespace-nowrap
     hover:border-degen-accent/30 hover:bg-degen-accent/10
     transition-all duration-200;
 }
 
+/* Hide scrollbar for nav on mobile */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Filter pills */
 .filter-pill {
-  @apply px-5 py-2.5 rounded-lg text-sm font-bold tracking-wide uppercase
+  @apply px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold tracking-wide uppercase
     border border-degen-border text-degen-muted bg-degen-card
     hover:text-degen-text hover:border-degen-accent/40
     transition-all duration-200;
@@ -441,4 +450,20 @@ body::before {
 
 .splash-skip:hover {
   color: rgba(148, 163, 184, 0.8);
+}
+
+/* ===== Toasts ===== */
+.toast-item {
+  animation: toastSlideIn 0.3s ease-out;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }

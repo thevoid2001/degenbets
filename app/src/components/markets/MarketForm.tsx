@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import { useCreateMarket } from "@/hooks/useCreateMarket";
 import { API_URL } from "@/lib/constants";
 import { getConfigPda } from "@/lib/program";
+import { useToast } from "@/components/common/ToastProvider";
 
 export function MarketForm() {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
   const router = useRouter();
   const { createMarket, loading } = useCreateMarket();
+  const { addToast } = useToast();
 
   const [question, setQuestion] = useState("");
   const [source, setSource] = useState("");
@@ -108,7 +110,14 @@ export function MarketForm() {
 
     // Step 2: Create market on-chain
     const liquidityLamports = Math.floor((parseFloat(liquidityAmount) || 1) * 1e9);
-    const result = await createMarket(question, source, timestamp, liquidityLamports);
+    let result;
+    try {
+      result = await createMarket(question, source, timestamp, liquidityLamports);
+    } catch (err: any) {
+      const msg = err?.message?.includes("User rejected") ? "Transaction rejected" : (err?.message?.slice(0, 80) || "Market creation failed");
+      addToast("error", msg);
+      return;
+    }
 
     if (result) {
       // Step 3: Sync market to backend database
@@ -154,6 +163,7 @@ export function MarketForm() {
         }
       }
 
+      addToast("success", "Market created!");
       router.push(`/market/${result.pubkey}`);
     }
   };

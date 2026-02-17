@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MarketDetail } from "@/components/markets/MarketDetail";
 import { BetPanel } from "@/components/markets/BetPanel";
 import { ClaimPanel } from "@/components/markets/ClaimPanel";
+import { PriceChart } from "@/components/markets/PriceChart";
 import { DealerChat } from "@/components/dealer/DealerChat";
 import { useMarket } from "@/hooks/useMarket";
 
@@ -40,6 +41,7 @@ export default function MarketPageClient() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-6">
         <MarketDetail market={market} />
+        <PriceChart marketId={market.market_id} currentYesPrice={market.yes_price ?? 0.5} />
         <DealerChat marketPubkey={market.pubkey} />
 
         {positions.length > 0 && (

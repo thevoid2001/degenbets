@@ -46,6 +46,9 @@ export function MarketDetail({ market }: MarketDetailProps) {
         offset += 4 + sourceLen; // resolution_source string
         offset += 8; // yes_reserve
         offset += 8; // no_reserve
+        offset += 8; // total_minted
+        offset += 8; // initial_liquidity
+        offset += 2; // swap_fee_bps
         offset += 8; // resolution_timestamp
         offset += 1; // status (enum)
         // Option<bool> outcome — 1 byte tag + 1 byte value if Some

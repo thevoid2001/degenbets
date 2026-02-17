@@ -70,6 +70,7 @@ interface MarketRow {
   outcome: boolean | null;
   creator_fee_claimed: boolean;
   image_url: string | null;
+  ai_reasoning: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -450,6 +451,7 @@ function formatMarket(m: MarketRow & { total_volume?: string }) {
     creator_fee_claimed: m.creator_fee_claimed,
     image_url: m.image_url || null,
     category: (m as any).category || "misc",
+    ai_reasoning: m.ai_reasoning || null,
     created_at: m.created_at,
     updated_at: m.updated_at,
   };

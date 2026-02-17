@@ -8,6 +8,7 @@ import usersRouter from "./routes/users";
 import creatorsRouter from "./routes/creators";
 import leaderboardRouter from "./routes/leaderboard";
 import syncRouter from "./routes/sync";
+import tradesRouter from "./routes/trades";
 import { resolveReadyMarkets } from "./services/resolver";
 
 dotenv.config();
@@ -27,6 +28,7 @@ app.use("/api/user", usersRouter);
 app.use("/api/creator", creatorsRouter);
 app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/sync", syncRouter);
+app.use("/api/trades", tradesRouter);
 
 // Resolution trigger endpoint
 app.post("/api/resolve/trigger", async (_req, res) => {

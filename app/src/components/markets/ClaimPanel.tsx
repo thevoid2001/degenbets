@@ -5,6 +5,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useClaimWinnings } from "@/hooks/useClaimWinnings";
 import { useClaimCreatorFee } from "@/hooks/useClaimCreatorFee";
+import { useToast } from "@/components/common/ToastProvider";
 import { getConfigPda, getPositionPda, getMarketPda } from "@/lib/program";
 import type { MarketData } from "@/lib/types";
 
@@ -29,6 +30,7 @@ export function ClaimPanel({ market, onTxSuccess }: ClaimPanelProps) {
   const [creatorFee, setCreatorFee] = useState(0);
   const [yesReserve, setYesReserve] = useState(0);
   const [noReserve, setNoReserve] = useState(0);
+  const { addToast } = useToast();
   const [txResult, setTxResult] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
   const isCreator = publicKey?.toBase58() === market.creator;
@@ -145,9 +147,12 @@ export function ClaimPanel({ market, onTxSuccess }: ClaimPanelProps) {
     try {
       await claimWinnings(market.pubkey, market.market_id);
       setTxResult({ type: "success", msg: "Winnings claimed!" });
+      addToast("success", `Claimed ${(winningsLamports / 1e9).toFixed(4)} SOL`);
       onTxSuccess?.();
     } catch (err: any) {
-      setTxResult({ type: "error", msg: err?.message?.slice(0, 100) || "Claim failed" });
+      const msg = err?.message?.slice(0, 100) || "Claim failed";
+      setTxResult({ type: "error", msg });
+      addToast("error", msg);
     }
   };
 
@@ -156,9 +161,12 @@ export function ClaimPanel({ market, onTxSuccess }: ClaimPanelProps) {
     try {
       await claimRefund(market.pubkey, market.market_id);
       setTxResult({ type: "success", msg: "Refund claimed!" });
+      addToast("success", `Refund claimed: ${(refundLamports / 1e9).toFixed(4)} SOL`);
       onTxSuccess?.();
     } catch (err: any) {
-      setTxResult({ type: "error", msg: err?.message?.slice(0, 100) || "Refund failed" });
+      const msg = err?.message?.slice(0, 100) || "Refund failed";
+      setTxResult({ type: "error", msg });
+      addToast("error", msg);
     }
   };
 
@@ -167,9 +175,12 @@ export function ClaimPanel({ market, onTxSuccess }: ClaimPanelProps) {
     try {
       await claimCreatorFee(market.pubkey);
       setTxResult({ type: "success", msg: "Creator fee + LP return claimed!" });
+      addToast("success", `Creator earnings claimed: ${(creatorPayoutLamports / 1e9).toFixed(4)} SOL`);
       onTxSuccess?.();
     } catch (err: any) {
-      setTxResult({ type: "error", msg: err?.message?.slice(0, 100) || "Claim failed" });
+      const msg = err?.message?.slice(0, 100) || "Claim failed";
+      setTxResult({ type: "error", msg });
+      addToast("error", msg);
     }
   };
 

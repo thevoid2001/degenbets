@@ -59,7 +59,32 @@ export function useBuy() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ marketId, userWallet: publicKey.toBase58(), costBasisDelta: amountLamports }),
-        }).catch(() => {});
+        })
+          .then((r) => r.json())
+          .then(() => {
+            // Fetch updated market to get price_after
+            fetch(`${API_URL}/api/markets/${marketId}`)
+              .then((r) => r.json())
+              .then((data) => {
+                const priceAfter = side ? data.market?.yes_price : data.market?.no_price;
+                fetch(`${API_URL}/api/trades`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    marketId,
+                    userWallet: publicKey.toBase58(),
+                    side,
+                    action: "buy",
+                    solAmount: amountLamports,
+                    shares: 0,
+                    priceAfter: priceAfter ?? 0.5,
+                    txSig: sig,
+                  }),
+                }).catch(() => {});
+              })
+              .catch(() => {});
+          })
+          .catch(() => {});
 
         return sig;
       } catch (err) {

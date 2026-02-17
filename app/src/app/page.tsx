@@ -38,17 +38,17 @@ export default function Home() {
 
   return (
     <div>
-      <div className="text-center mb-12">
-        <h1 className="text-6xl sm:text-7xl font-black tracking-tight mb-4 neon-text leading-tight">
+      <div className="text-center mb-8 sm:mb-12">
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-3 sm:mb-4 neon-text leading-tight">
           Create. Bet. Earn.
         </h1>
-        <p className="text-degen-text-secondary text-lg max-w-xl mx-auto">
+        <p className="text-degen-text-secondary text-base sm:text-lg max-w-xl mx-auto">
           Prediction Market Launchpad on Solana
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-        <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="flex gap-1.5 sm:gap-2 flex-wrap justify-center">
           {(["open", "resolved", "voided", "all"] as const).map((f) => (
             <button
               key={f}

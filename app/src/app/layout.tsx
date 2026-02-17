@@ -5,6 +5,7 @@ import { WalletContextProvider } from "@/components/common/WalletProvider";
 import { ThemeProvider } from "@/components/common/ThemeProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ToastProvider } from "@/components/common/ToastProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
@@ -47,13 +48,15 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <WalletContextProvider>
-            <div className="flex flex-col min-h-screen">
-              <Header />
-              <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
-                {children}
-              </main>
-              <Footer />
-            </div>
+            <ToastProvider>
+              <div className="flex flex-col min-h-screen">
+                <Header />
+                <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+                  {children}
+                </main>
+                <Footer />
+              </div>
+            </ToastProvider>
           </WalletContextProvider>
         </ThemeProvider>
       </body>

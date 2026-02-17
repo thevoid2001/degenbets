@@ -6,6 +6,7 @@ import { PublicKey } from "@solana/web3.js";
 import { useBuy } from "@/hooks/useBuy";
 import { useSell } from "@/hooks/useSell";
 import { useDealer } from "@/hooks/useDealer";
+import { useToast } from "@/components/common/ToastProvider";
 import { getConfigPda, getPositionPda } from "@/lib/program";
 import { PROGRAM_ID, API_URL } from "@/lib/constants";
 import type { MarketData } from "@/lib/types";
@@ -25,6 +26,7 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
   const { buy, loading } = useBuy();
   const { sell, loading: sellLoading } = useSell();
   const { comment } = useDealer(market.pubkey);
+  const { addToast } = useToast();
 
   const [paused, setPaused] = useState(false);
   const [minBetLamports, setMinBetLamports] = useState(0);
@@ -139,9 +141,15 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
 
   const handleBuy = async () => {
     if (!publicKey || side === null || amountLamports <= 0) return;
-    await buy(market.market_id, amountLamports, side);
-    // Refresh market data from backend after sync completes
-    setTimeout(() => onTxSuccess?.(), 1500);
+    try {
+      await buy(market.market_id, amountLamports, side);
+      addToast("success", `Bought ${amountNum} SOL of ${side ? "YES" : "NO"}`);
+      setAmount("");
+      setTimeout(() => onTxSuccess?.(), 1500);
+    } catch (err: any) {
+      const msg = err?.message?.includes("User rejected") ? "Transaction rejected" : (err?.message?.slice(0, 80) || "Transaction failed");
+      addToast("error", msg);
+    }
   };
 
   const handleSell = async (sellSide: boolean) => {
@@ -153,10 +161,12 @@ export function BetPanel({ market, onTxSuccess }: BetPanelProps) {
     const totalSharesBefore = userYesShares + userNoShares;
     try {
       await sell(market.pubkey, finalShares, sellSide, market.market_id, totalSharesBefore, costBasis);
+      addToast("success", `Sold ${(finalShares / 1e9).toFixed(4)} ${sellSide ? "YES" : "NO"} shares`);
       setSellSharesInput("");
       setTimeout(() => onTxSuccess?.(), 1500);
-    } catch (err) {
-      // error logged in hook
+    } catch (err: any) {
+      const msg = err?.message?.includes("User rejected") ? "Transaction rejected" : (err?.message?.slice(0, 80) || "Sell failed");
+      addToast("error", msg);
     }
   };
 

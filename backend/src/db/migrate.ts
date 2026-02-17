@@ -154,6 +154,27 @@ END $$;
 
 -- Positions: add cost_basis for P&L tracking
 ALTER TABLE positions ADD COLUMN IF NOT EXISTS cost_basis BIGINT NOT NULL DEFAULT 0;
+
+-- Markets: add ai_reasoning column
+ALTER TABLE markets ADD COLUMN IF NOT EXISTS ai_reasoning TEXT;
+
+-- Trades table for price history
+CREATE TABLE IF NOT EXISTS trades (
+    id          SERIAL PRIMARY KEY,
+    market_id   BIGINT NOT NULL REFERENCES markets(market_id),
+    user_wallet VARCHAR(64) NOT NULL,
+    side        BOOLEAN NOT NULL,
+    action      VARCHAR(4) NOT NULL,
+    sol_amount  BIGINT NOT NULL DEFAULT 0,
+    shares      BIGINT NOT NULL DEFAULT 0,
+    price_after REAL NOT NULL DEFAULT 0.5,
+    tx_sig      VARCHAR(128),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_trades_market ON trades(market_id);
+CREATE INDEX IF NOT EXISTS idx_trades_market_time ON trades(market_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_trades_user ON trades(user_wallet);
 `;
 
 async function migrate(): Promise<void> {

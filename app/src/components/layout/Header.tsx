@@ -11,16 +11,16 @@ export function Header() {
     <header className="border-b border-degen-border bg-degen-card/50 backdrop-blur-sm">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Top row: D icon left, wordmark centered, actions right */}
-        <div className="flex items-center justify-between h-32">
+        <div className="flex items-center justify-between h-20 sm:h-32">
           <Link href="/" className="logo-glow shrink-0">
             <img
               src="/degenbets-neon-icon.svg"
               alt=""
-              className="h-14 w-14"
+              className="h-10 w-10 sm:h-14 sm:w-14"
             />
           </Link>
 
-          <Link href="/" className="logo-glow absolute left-1/2 -translate-x-1/2">
+          <Link href="/" className="logo-glow absolute left-1/2 -translate-x-1/2 hidden sm:block">
             <img
               src="/degenbets-neon-logo.svg"
               alt="DegenBets"
@@ -28,7 +28,7 @@ export function Header() {
             />
           </Link>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg border border-degen-border hover:border-degen-accent/50 text-degen-muted hover:text-degen-accent transition-colors"
@@ -48,8 +48,8 @@ export function Header() {
           </div>
         </div>
 
-        {/* Nav row: centered underneath */}
-        <nav className="flex items-center justify-center gap-2 pb-4">
+        {/* Nav row: horizontally scrollable on mobile */}
+        <nav className="flex items-center justify-center gap-2 pb-3 sm:pb-4 overflow-x-auto scrollbar-hide">
           {[
             { href: "/", label: "Markets" },
             { href: "/create", label: "Create" },

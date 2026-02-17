@@ -59,7 +59,31 @@ export function useSell() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ marketId, userWallet: publicKey.toBase58(), costBasisDelta }),
-          }).catch(() => {});
+          })
+            .then((r) => r.json())
+            .then(() => {
+              fetch(`${API_URL}/api/markets/${marketId}`)
+                .then((r) => r.json())
+                .then((data) => {
+                  const priceAfter = side ? data.market?.yes_price : data.market?.no_price;
+                  fetch(`${API_URL}/api/trades`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      marketId,
+                      userWallet: publicKey.toBase58(),
+                      side,
+                      action: "sell",
+                      solAmount: 0,
+                      shares,
+                      priceAfter: priceAfter ?? 0.5,
+                      txSig: sig,
+                    }),
+                  }).catch(() => {});
+                })
+                .catch(() => {});
+            })
+            .catch(() => {});
         }
 
         return sig;
