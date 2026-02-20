@@ -77,12 +77,33 @@ export function useCreateMarket() {
         };
 
         const tx = new Transaction().add(ix);
+        tx.feePayer = publicKey;
+        tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+        // Pre-flight simulation to catch errors before Phantom intercepts
+        const sim = await connection.simulateTransaction(tx);
+        if (sim.value.err) {
+          const logs = sim.value.logs?.join("\n") || "";
+          const anchorMatch = logs.match(/Error Code: (\w+)/);
+          if (anchorMatch) throw new Error(`Program error: ${anchorMatch[1]}`);
+          if (logs.includes("insufficient lamports")) {
+            throw new Error("Insufficient SOL balance. You need enough for liquidity + ~0.01 SOL rent.");
+          }
+          throw new Error(`Transaction failed: ${JSON.stringify(sim.value.err)}`);
+        }
+
         const sig = await sendTransaction(tx, connection);
         await connection.confirmTransaction(sig, "confirmed");
 
         return { pubkey: marketPda.toBase58(), marketId: Number(marketCount) };
-      } catch (err) {
+      } catch (err: any) {
         console.error("Create market error:", err);
+        // Extract Anchor error if available
+        const logs = err?.logs || err?.message || "";
+        const anchorMatch = String(logs).match(/Error Code: (\w+)/);
+        if (anchorMatch) {
+          throw new Error(`Program error: ${anchorMatch[1]}`);
+        }
         throw err;
       } finally {
         setLoading(false);

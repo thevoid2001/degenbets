@@ -26,6 +26,13 @@ export function MarketForm() {
   const [minLiquidity, setMinLiquidity] = useState<number | null>(null);
   const [solPrice, setSolPrice] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+
+  // Fetch wallet balance
+  useEffect(() => {
+    if (!publicKey) { setWalletBalance(null); return; }
+    connection.getBalance(publicKey).then((bal) => setWalletBalance(bal / 1e9)).catch(() => {});
+  }, [publicKey, connection]);
 
   // Fetch min liquidity from on-chain config and SOL price
   useEffect(() => {
@@ -317,9 +324,18 @@ export function MarketForm() {
           </span>
         </div>
         <div className="flex justify-between text-sm">
+          <span className="text-degen-muted">Est. Total Cost:</span>
+          <span className="font-bold">{(liquidityNum + 0.01).toFixed(3)} SOL</span>
+        </div>
+        <div className="flex justify-between text-sm">
           <span className="text-degen-muted">Creator Earnings:</span>
           <span className="font-bold text-degen-green">1% of volume traded</span>
         </div>
+        {walletBalance !== null && liquidityNum + 0.01 > walletBalance && (
+          <div className="p-2 bg-degen-red/10 border border-degen-red/30 rounded-lg text-degen-red text-xs font-medium">
+            Insufficient balance. You have {walletBalance.toFixed(4)} SOL but need ~{(liquidityNum + 0.01).toFixed(3)} SOL (liquidity + rent).
+          </div>
+        )}
         <p className="text-xs text-degen-muted">
           Your liquidity is returned to you when the market resolves. The return amount may vary slightly depending on trading activity (swap fees grow the pool in your favor).
         </p>
