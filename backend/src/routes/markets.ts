@@ -125,22 +125,44 @@ router.post("/", async (req: Request, res: Response) => {
       }
     }
 
-    // Upsert — ignore if already exists (idempotent)
+    // Upsert — if market_id exists with a different pubkey (stale from old program), replace it
     const result = await query(
       `INSERT INTO markets (market_id, pubkey, creator, question, resolution_source, resolution_timestamp, status, category)
        VALUES ($1, $2, $3, $4, $5, $6, 'open', $7)
-       ON CONFLICT (pubkey) DO NOTHING
+       ON CONFLICT (market_id) DO UPDATE SET
+         pubkey = EXCLUDED.pubkey,
+         creator = EXCLUDED.creator,
+         question = EXCLUDED.question,
+         resolution_source = EXCLUDED.resolution_source,
+         resolution_timestamp = EXCLUDED.resolution_timestamp,
+         status = 'open',
+         category = EXCLUDED.category,
+         yes_reserve = 0,
+         no_reserve = 0,
+         total_minted = 0,
+         outcome = NULL,
+         creator_fee_claimed = FALSE
+       WHERE markets.pubkey != EXCLUDED.pubkey
        RETURNING *`,
       [marketId, pubkey, creator, question, resolutionSource, resolutionTimestamp, marketCategory]
     );
 
     if (result.length === 0) {
-      // Already existed
+      // Already existed with same pubkey (idempotent)
       const existing = await query<MarketRow>(
         "SELECT *, (yes_reserve + no_reserve) AS total_volume FROM markets WHERE pubkey = $1",
         [pubkey]
       );
-      res.json({ market: formatMarket(existing[0]), created: false });
+      if (existing.length > 0) {
+        res.json({ market: formatMarket(existing[0]), created: false });
+        return;
+      }
+      // Edge case: pubkey conflict — try by market_id
+      const byId = await query<MarketRow>(
+        "SELECT *, (yes_reserve + no_reserve) AS total_volume FROM markets WHERE market_id = $1",
+        [marketId]
+      );
+      res.json({ market: formatMarket(byId[0]), created: false });
       return;
     }
 
