@@ -11,7 +11,7 @@ import { PROGRAM_ID, API_URL } from "@/lib/constants";
 
 export function useBuy() {
   const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
   const [loading, setLoading] = useState(false);
 
   const buy = useCallback(
@@ -20,7 +20,7 @@ export function useBuy() {
       amountLamports: number,
       side: boolean
     ) => {
-      if (!publicKey) return;
+      if (!publicKey || !signTransaction) return;
       setLoading(true);
 
       try {
@@ -52,12 +52,14 @@ export function useBuy() {
 
         const tx = new Transaction().add(ix);
         tx.feePayer = publicKey;
-        tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+        tx.recentBlockhash = blockhash;
 
-        // Pre-flight simulation to catch errors before Phantom intercepts
+        // Pre-flight simulation to catch errors before wallet interaction
         const sim = await connection.simulateTransaction(tx);
         if (sim.value.err) {
           const logs = sim.value.logs?.join("\n") || "";
+          console.error("Simulation logs:", logs);
           const anchorMatch = logs.match(/Error Code: (\w+)/);
           if (anchorMatch) throw new Error(`Program error: ${anchorMatch[1]}`);
           if (logs.includes("insufficient lamports")) {
@@ -66,8 +68,16 @@ export function useBuy() {
           throw new Error(`Transaction failed: ${JSON.stringify(sim.value.err)}`);
         }
 
-        const sig = await sendTransaction(tx, connection);
-        await connection.confirmTransaction(sig, "confirmed");
+        // Use signTransaction + sendRawTransaction to bypass Phantom's
+        // internal simulation which shows a generic "unexpected error" dialog
+        const signed = await signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signed.serialize(), {
+          skipPreflight: true,
+        });
+        await connection.confirmTransaction(
+          { signature: sig, blockhash, lastValidBlockHeight },
+          "confirmed"
+        );
 
         // Sync on-chain data to backend DB (include cost basis for P&L tracking)
         fetch(`${API_URL}/api/sync`, {
@@ -114,7 +124,7 @@ export function useBuy() {
         setLoading(false);
       }
     },
-    [publicKey, connection, sendTransaction]
+    [publicKey, connection, signTransaction]
   );
 
   return { buy, loading };

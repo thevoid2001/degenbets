@@ -8,12 +8,12 @@ import { PROGRAM_ID } from "@/lib/constants";
 
 export function useClaimCreatorFee() {
   const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
   const [loading, setLoading] = useState(false);
 
   const claimCreatorFee = useCallback(
     async (marketPubkey: string) => {
-      if (!publicKey) return;
+      if (!publicKey || !signTransaction) return;
       setLoading(true);
 
       try {
@@ -38,8 +38,19 @@ export function useClaimCreatorFee() {
         };
 
         const tx = new Transaction().add(ix);
-        const sig = await sendTransaction(tx, connection);
-        await connection.confirmTransaction(sig, "confirmed");
+        tx.feePayer = publicKey;
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+        tx.recentBlockhash = blockhash;
+
+        const signed = await signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signed.serialize(), {
+          skipPreflight: true,
+        });
+        await connection.confirmTransaction(
+          { signature: sig, blockhash, lastValidBlockHeight },
+          "confirmed"
+        );
+
         return sig;
       } catch (err) {
         console.error("Claim creator fee error:", err);
@@ -48,7 +59,7 @@ export function useClaimCreatorFee() {
         setLoading(false);
       }
     },
-    [publicKey, connection, sendTransaction]
+    [publicKey, connection, signTransaction]
   );
 
   return { claimCreatorFee, loading };

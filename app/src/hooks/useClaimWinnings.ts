@@ -8,12 +8,12 @@ import { PROGRAM_ID, API_URL } from "@/lib/constants";
 
 export function useClaimWinnings() {
   const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
   const [loading, setLoading] = useState(false);
 
   const claimWinnings = useCallback(
     async (marketPubkey: string, marketId?: number) => {
-      if (!publicKey) return;
+      if (!publicKey || !signTransaction) return;
       setLoading(true);
 
       try {
@@ -38,8 +38,18 @@ export function useClaimWinnings() {
         };
 
         const tx = new Transaction().add(ix);
-        const sig = await sendTransaction(tx, connection);
-        await connection.confirmTransaction(sig, "confirmed");
+        tx.feePayer = publicKey;
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+        tx.recentBlockhash = blockhash;
+
+        const signed = await signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signed.serialize(), {
+          skipPreflight: true,
+        });
+        await connection.confirmTransaction(
+          { signature: sig, blockhash, lastValidBlockHeight },
+          "confirmed"
+        );
 
         // Sync claimed status to DB
         if (marketId) {
@@ -58,12 +68,12 @@ export function useClaimWinnings() {
         setLoading(false);
       }
     },
-    [publicKey, connection, sendTransaction]
+    [publicKey, connection, signTransaction]
   );
 
   const claimRefund = useCallback(
     async (marketPubkey: string, marketId?: number) => {
-      if (!publicKey) return;
+      if (!publicKey || !signTransaction) return;
       setLoading(true);
 
       try {
@@ -86,8 +96,18 @@ export function useClaimWinnings() {
         };
 
         const tx = new Transaction().add(ix);
-        const sig = await sendTransaction(tx, connection);
-        await connection.confirmTransaction(sig, "confirmed");
+        tx.feePayer = publicKey;
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+        tx.recentBlockhash = blockhash;
+
+        const signed = await signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signed.serialize(), {
+          skipPreflight: true,
+        });
+        await connection.confirmTransaction(
+          { signature: sig, blockhash, lastValidBlockHeight },
+          "confirmed"
+        );
 
         // Sync claimed status to DB
         if (marketId) {
@@ -106,7 +126,7 @@ export function useClaimWinnings() {
         setLoading(false);
       }
     },
-    [publicKey, connection, sendTransaction]
+    [publicKey, connection, signTransaction]
   );
 
   return { claimWinnings, claimRefund, loading };

@@ -8,7 +8,7 @@ import { PROGRAM_ID } from "@/lib/constants";
 
 export function useCreateMarket() {
   const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
   const [loading, setLoading] = useState(false);
 
   const createMarket = useCallback(
@@ -18,7 +18,7 @@ export function useCreateMarket() {
       resolutionTimestamp: number,
       liquidityLamports: number
     ) => {
-      if (!publicKey) return null;
+      if (!publicKey || !signTransaction) return null;
       setLoading(true);
 
       try {
@@ -78,27 +78,36 @@ export function useCreateMarket() {
 
         const tx = new Transaction().add(ix);
         tx.feePayer = publicKey;
-        tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+        tx.recentBlockhash = blockhash;
 
-        // Pre-flight simulation to catch errors before Phantom intercepts
+        // Pre-flight simulation to catch errors before wallet interaction
         const sim = await connection.simulateTransaction(tx);
         if (sim.value.err) {
           const logs = sim.value.logs?.join("\n") || "";
+          console.error("Simulation logs:", logs);
           const anchorMatch = logs.match(/Error Code: (\w+)/);
           if (anchorMatch) throw new Error(`Program error: ${anchorMatch[1]}`);
           if (logs.includes("insufficient lamports")) {
             throw new Error("Insufficient SOL balance. You need enough for liquidity + ~0.01 SOL rent.");
           }
-          throw new Error(`Transaction failed: ${JSON.stringify(sim.value.err)}`);
+          throw new Error(`Transaction simulation failed: ${JSON.stringify(sim.value.err)}`);
         }
 
-        const sig = await sendTransaction(tx, connection);
-        await connection.confirmTransaction(sig, "confirmed");
+        // Use signTransaction + sendRawTransaction to bypass Phantom's
+        // internal simulation which shows a generic "unexpected error" dialog
+        const signed = await signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signed.serialize(), {
+          skipPreflight: true,
+        });
+        await connection.confirmTransaction(
+          { signature: sig, blockhash, lastValidBlockHeight },
+          "confirmed"
+        );
 
         return { pubkey: marketPda.toBase58(), marketId: Number(marketCount) };
       } catch (err: any) {
         console.error("Create market error:", err);
-        // Extract Anchor error if available
         const logs = err?.logs || err?.message || "";
         const anchorMatch = String(logs).match(/Error Code: (\w+)/);
         if (anchorMatch) {
@@ -109,7 +118,7 @@ export function useCreateMarket() {
         setLoading(false);
       }
     },
-    [publicKey, connection, sendTransaction]
+    [publicKey, connection, signTransaction]
   );
 
   return { createMarket, loading };
