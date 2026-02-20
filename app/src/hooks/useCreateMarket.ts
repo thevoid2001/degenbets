@@ -6,6 +6,9 @@ import { Transaction, SystemProgram } from "@solana/web3.js";
 import { getConfigPda, getMarketPda, getCreatorProfilePda } from "@/lib/program";
 import { PROGRAM_ID } from "@/lib/constants";
 
+// Rent for market (867 bytes) + creator profile (73 bytes) + tx fee
+const RENT_OVERHEAD_LAMPORTS = 9_000_000; // ~0.009 SOL
+
 export function useCreateMarket() {
   const { connection } = useConnection();
   const { publicKey, signTransaction } = useWallet();
@@ -22,6 +25,15 @@ export function useCreateMarket() {
       setLoading(true);
 
       try {
+        // Early balance check before building transaction
+        const balance = await connection.getBalance(publicKey);
+        const totalNeeded = liquidityLamports + RENT_OVERHEAD_LAMPORTS;
+        if (balance < totalNeeded) {
+          throw new Error(
+            `Insufficient SOL. You have ${(balance / 1e9).toFixed(4)} SOL but need ~${(totalNeeded / 1e9).toFixed(4)} SOL (${(liquidityLamports / 1e9).toFixed(2)} liquidity + ~0.009 rent).`
+          );
+        }
+
         const [configPda] = getConfigPda();
         const [creatorProfilePda] = getCreatorProfilePda(publicKey);
 
@@ -38,7 +50,6 @@ export function useCreateMarket() {
           103, 226, 97, 235, 200, 188, 251, 254,
         ]);
 
-        // Encode question as Anchor string: 4-byte LE length + utf8 bytes
         const questionBytes = Buffer.from(question, "utf-8");
         const questionLen = Buffer.alloc(4);
         questionLen.writeUInt32LE(questionBytes.length);
@@ -50,7 +61,6 @@ export function useCreateMarket() {
         const timestampBuf = Buffer.alloc(8);
         timestampBuf.writeBigInt64LE(BigInt(resolutionTimestamp));
 
-        // liquidity_amount (u64 LE)
         const liquidityBuf = Buffer.alloc(8);
         liquidityBuf.writeBigUInt64LE(BigInt(liquidityLamports));
 
@@ -81,21 +91,31 @@ export function useCreateMarket() {
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
         tx.recentBlockhash = blockhash;
 
-        // Pre-flight simulation to catch errors before wallet interaction
-        const sim = await connection.simulateTransaction(tx);
-        if (sim.value.err) {
-          const logs = sim.value.logs?.join("\n") || "";
-          console.error("Simulation logs:", logs);
-          const anchorMatch = logs.match(/Error Code: (\w+)/);
-          if (anchorMatch) throw new Error(`Program error: ${anchorMatch[1]}`);
-          if (logs.includes("insufficient lamports")) {
-            throw new Error("Insufficient SOL balance. You need enough for liquidity + ~0.01 SOL rent.");
+        // Pre-flight simulation (wrapped in try-catch in case RPC throws)
+        try {
+          const sim = await connection.simulateTransaction(tx);
+          if (sim.value.err) {
+            const logs = sim.value.logs?.join("\n") || "";
+            console.error("Simulation failed. Logs:", logs);
+            const anchorMatch = logs.match(/Error Code: (\w+)/);
+            if (anchorMatch) throw new Error(`Program error: ${anchorMatch[1]}`);
+            if (logs.includes("insufficient lamports")) {
+              throw new Error(
+                `Insufficient SOL. You have ${(balance / 1e9).toFixed(4)} SOL but need ~${(totalNeeded / 1e9).toFixed(4)} SOL.`
+              );
+            }
+            throw new Error(`Transaction simulation failed: ${JSON.stringify(sim.value.err)}`);
           }
-          throw new Error(`Transaction simulation failed: ${JSON.stringify(sim.value.err)}`);
+        } catch (simErr: any) {
+          // If it's our custom error, re-throw
+          if (simErr.message?.includes("Insufficient") || simErr.message?.includes("Program error")) {
+            throw simErr;
+          }
+          // Otherwise log and continue (let on-chain execution catch it)
+          console.error("Simulation threw exception:", simErr);
         }
 
-        // Use signTransaction + sendRawTransaction to bypass Phantom's
-        // internal simulation which shows a generic "unexpected error" dialog
+        // Sign + send (bypasses Phantom's internal simulation)
         const signed = await signTransaction(tx);
         const sig = await connection.sendRawTransaction(signed.serialize(), {
           skipPreflight: true,
@@ -112,6 +132,10 @@ export function useCreateMarket() {
         const anchorMatch = String(logs).match(/Error Code: (\w+)/);
         if (anchorMatch) {
           throw new Error(`Program error: ${anchorMatch[1]}`);
+        }
+        // Make sure we never show a blank error
+        if (!err.message || err.message === "unexpected error") {
+          throw new Error("Transaction failed. Check your SOL balance and try again.");
         }
         throw err;
       } finally {

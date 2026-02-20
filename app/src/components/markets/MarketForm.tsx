@@ -176,13 +176,15 @@ export function MarketForm() {
   };
 
   const liquidityNum = parseFloat(liquidityAmount) || 0;
+  const insufficientBalance = walletBalance !== null && liquidityNum + 0.009 > walletBalance;
   const isValid =
     question.length > 0 &&
     question.length <= 256 &&
     source.startsWith("http") &&
     date &&
     time &&
-    liquidityNum >= (minLiquidity ?? 1);
+    liquidityNum >= (minLiquidity ?? 1) &&
+    !insufficientBalance;
 
   return (
     <form onSubmit={handleSubmit} className="card space-y-6">
@@ -312,6 +314,12 @@ export function MarketForm() {
       </div>
 
       <div className="border-t border-degen-border pt-6 space-y-2">
+        {walletBalance !== null && (
+          <div className="flex justify-between text-sm">
+            <span className="text-degen-muted">Wallet Balance:</span>
+            <span className="font-bold">{walletBalance.toFixed(4)} SOL</span>
+          </div>
+        )}
         <div className="flex justify-between text-sm">
           <span className="text-degen-muted">Liquidity Deposit:</span>
           <span className="font-bold">
@@ -325,15 +333,15 @@ export function MarketForm() {
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-degen-muted">Est. Total Cost:</span>
-          <span className="font-bold">{(liquidityNum + 0.01).toFixed(3)} SOL</span>
+          <span className={`font-bold ${insufficientBalance ? "text-degen-red" : ""}`}>{(liquidityNum + 0.009).toFixed(4)} SOL</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-degen-muted">Creator Earnings:</span>
           <span className="font-bold text-degen-green">1% of volume traded</span>
         </div>
-        {walletBalance !== null && liquidityNum + 0.01 > walletBalance && (
+        {insufficientBalance && (
           <div className="p-2 bg-degen-red/10 border border-degen-red/30 rounded-lg text-degen-red text-xs font-medium">
-            Insufficient balance. You have {walletBalance.toFixed(4)} SOL but need ~{(liquidityNum + 0.01).toFixed(3)} SOL (liquidity + rent).
+            Insufficient balance. You have {walletBalance?.toFixed(4)} SOL but need ~{(liquidityNum + 0.009).toFixed(4)} SOL (liquidity + rent).
           </div>
         )}
         <p className="text-xs text-degen-muted">
