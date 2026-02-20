@@ -93,7 +93,8 @@ export function MarketForm() {
     e.preventDefault();
     if (!publicKey) return;
 
-    const resolutionDate = new Date(`${date}T${time}:00`);
+    // Interpret date/time as EST (UTC-5)
+    const resolutionDate = new Date(`${date}T${time}:00-05:00`);
     const timestamp = Math.floor(resolutionDate.getTime() / 1000);
 
     // Step 1: Upload image if selected
@@ -247,7 +248,7 @@ export function MarketForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Time (Local)</label>
+          <label className="block text-sm font-medium mb-2">Time (EST)</label>
           <input
             type="time"
             value={time}
