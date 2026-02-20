@@ -47,6 +47,28 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: Date.now() });
 });
 
+// Admin: reset all data (for dev/testing only)
+app.post("/api/admin/reset", async (req, res) => {
+  const key = req.headers["x-admin-key"];
+  if (key !== process.env.AUTHORITY_PRIVATE_KEY?.slice(0, 16)) {
+    res.status(403).json({ error: "Unauthorized" });
+    return;
+  }
+  try {
+    const { query: dbQuery } = await import("./db/pool");
+    await dbQuery("DELETE FROM trades");
+    await dbQuery("DELETE FROM resolution_logs");
+    await dbQuery("DELETE FROM positions");
+    await dbQuery("DELETE FROM markets");
+    await dbQuery("DELETE FROM creator_profiles");
+    await dbQuery("DELETE FROM user_stats");
+    res.json({ success: true, message: "All data cleared" });
+  } catch (err) {
+    console.error("[admin] Reset error:", err);
+    res.status(500).json({ error: "Reset failed" });
+  }
+});
+
 // Resolution cron - every 5 minutes
 cron.schedule("*/5 * * * *", async () => {
   console.log("[cron] Running resolution check...");
