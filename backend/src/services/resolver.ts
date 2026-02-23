@@ -98,7 +98,9 @@ function htmlToText(html: string): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Ask AI to resolve a prediction market question based on source text.
+ * Ask AI to resolve a prediction market question.
+ * Uses Anthropic web search tool so the AI can look up results even when
+ * the resolution source URL can't be scraped directly (JS-rendered SPAs, etc.).
  */
 async function askAI(
   question: string,
@@ -116,47 +118,69 @@ async function askAI(
 
   const anthropic = new Anthropic({ apiKey });
 
+  const hasSourceText = sourceText.length > 100 && !sourceText.startsWith("[FETCH ERROR");
+
   const systemPrompt = `You are the resolution oracle for a prediction market platform called DegenBets. Your job is to determine whether a prediction market question has resolved YES, NO, or should be VOIDED.
 
 Rules:
-1. Analyze the provided source text carefully.
-2. Only resolve YES or NO if the source text provides clear, definitive evidence.
-3. If the source text is ambiguous, unavailable, or the event hasn't clearly occurred/not occurred, resolve VOID.
-4. Be conservative - when in doubt, VOID.
-5. Provide a confidence score from 0.0 to 1.0.
+1. You have access to web search. USE IT to verify the outcome of the market question.
+2. Search for the specific event, game result, or outcome described in the question.
+3. Only resolve YES or NO if you find clear, definitive evidence from reliable sources.
+4. If the event genuinely hasn't happened yet, or you truly cannot find any information after searching, resolve VOID.
+5. Do NOT void just because the provided source URL failed to load — search the web instead.
+6. Provide a confidence score from 0.0 to 1.0.
 
-Respond ONLY with valid JSON in this exact format:
-{"decision": "yes" | "no" | "void", "confidence": 0.0-1.0, "reasoning": "brief explanation"}`;
+After searching, respond with ONLY valid JSON in this exact format:
+{"decision": "yes" | "no" | "void", "confidence": 0.0-1.0, "reasoning": "brief explanation with source"}`;
 
-  const userPrompt = `Market Question: ${question}
+  let userPrompt: string;
+  if (hasSourceText) {
+    userPrompt = `Market Question: "${question}"
 
 Resolution Source URL: ${sourceUrl}
 
-Extracted Source Text (may be truncated):
+I was able to fetch some text from the source URL:
 ---
-${sourceText.slice(0, 30_000)}
+${sourceText.slice(0, 20_000)}
 ---
 
-Based on the source text above, has the market question resolved YES, NO, or should it be VOIDED? Respond with JSON only.`;
+Please also search the web to verify this information. Then determine: has this market resolved YES, NO, or should it be VOIDED? Respond with JSON only.`;
+  } else {
+    userPrompt = `Market Question: "${question}"
+
+Resolution Source URL: ${sourceUrl}
+
+The source URL could not be fetched directly (it may be a JavaScript-rendered page). Please search the web to find the result of this event and determine: has this market resolved YES, NO, or should it be VOIDED? Respond with JSON only.`;
+  }
 
   try {
     const response = await anthropic.messages.create({
       model: process.env.AI_MODEL || "claude-sonnet-4-20250514",
-      max_tokens: 512,
+      max_tokens: 1024,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
+      tools: [
+        {
+          type: "web_search_20250305" as any,
+          name: "web_search",
+          max_uses: 3,
+        } as any,
+      ],
     });
 
-    const text =
-      response.content[0].type === "text" ? response.content[0].text : "";
+    // Extract text from all content blocks (web search produces multiple blocks)
+    const textBlocks = response.content.filter(
+      (b: any) => b.type === "text"
+    ) as Array<{ type: "text"; text: string }>;
+    const fullText = textBlocks.map((b) => b.text).join("\n");
 
     // Extract JSON from the response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonMatch = fullText.match(/\{[\s\S]*?\}/);
     if (!jsonMatch) {
       return {
         decision: "error",
         confidence: 0,
-        reasoning: `Failed to parse AI response: ${text.slice(0, 200)}`,
+        reasoning: `Failed to parse AI response: ${fullText.slice(0, 200)}`,
       };
     }
 

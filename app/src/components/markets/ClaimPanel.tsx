@@ -30,6 +30,7 @@ export function ClaimPanel({ market, onTxSuccess }: ClaimPanelProps) {
   const [creatorFee, setCreatorFee] = useState(0);
   const [yesReserve, setYesReserve] = useState(0);
   const [noReserve, setNoReserve] = useState(0);
+  const [initialLiquidity, setInitialLiquidity] = useState(0);
   const { addToast } = useToast();
   const [txResult, setTxResult] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
@@ -68,11 +69,12 @@ export function ClaimPanel({ market, onTxSuccess }: ClaimPanelProps) {
           const yr = Number(data.readBigUInt64LE(offset)); offset += 8;
           const nr = Number(data.readBigUInt64LE(offset)); offset += 8;
           const tm = Number(data.readBigUInt64LE(offset)); offset += 8;
-          offset += 8; // initial_liquidity
+          const il = Number(data.readBigUInt64LE(offset)); offset += 8;
           offset += 2; // swap_fee_bps
           setYesReserve(yr);
           setNoReserve(nr);
           setTotalMinted(tm);
+          setInitialLiquidity(il);
 
           offset += 8; // resolution_timestamp
           offset += 1; // status
@@ -299,7 +301,7 @@ export function ClaimPanel({ market, onTxSuccess }: ClaimPanelProps) {
         </p>
       )}
 
-      {/* Creator fee claim */}
+      {/* Creator fee claim (resolved) */}
       {publicKey && isCreator && isResolved && (
         <div className="pt-4 border-t border-degen-border space-y-3">
           <p className="text-sm font-medium">Creator Earnings</p>
@@ -335,6 +337,35 @@ export function ClaimPanel({ market, onTxSuccess }: ClaimPanelProps) {
                 : !canClaim
                   ? "Locked — Challenge Period"
                   : `Claim ${(creatorPayoutLamports / 1e9).toFixed(4)} SOL`}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Creator liquidity refund (voided) */}
+      {publicKey && isCreator && isVoided && (
+        <div className="pt-4 border-t border-degen-border space-y-3">
+          <p className="text-sm font-medium">Creator Liquidity Refund</p>
+          <div className="p-3 bg-degen-dark rounded-lg space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-degen-muted">Initial liquidity</span>
+              <span className="font-bold text-degen-accent">
+                {(initialLiquidity / 1e9).toFixed(4)} SOL
+              </span>
+            </div>
+          </div>
+
+          {creatorFeeClaimed ? (
+            <p className="text-sm text-degen-green text-center">Liquidity refund claimed</p>
+          ) : (
+            <button
+              onClick={handleClaimCreatorFee}
+              disabled={creatorClaimLoading}
+              className="w-full py-3 rounded-lg font-bold transition-all bg-degen-accent/20 text-degen-accent border border-degen-accent/50 hover:bg-degen-accent/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {creatorClaimLoading
+                ? "Claiming..."
+                : `Claim Liquidity — ${(initialLiquidity / 1e9).toFixed(4)} SOL`}
             </button>
           )}
         </div>

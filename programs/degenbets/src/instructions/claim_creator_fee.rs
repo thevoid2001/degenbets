@@ -36,49 +36,67 @@ pub fn handler(ctx: Context<ClaimCreatorFee>) -> Result<()> {
     let market = &ctx.accounts.market;
     let config = &ctx.accounts.config;
 
-    require!(market.status == MarketStatus::Resolved, DegenBetsError::MarketNotResolved);
+    // Allow claim on Resolved OR Voided markets
+    require!(
+        market.status == MarketStatus::Resolved || market.status == MarketStatus::Voided,
+        DegenBetsError::MarketNotResolved
+    );
     require!(!market.creator_fee_claimed, DegenBetsError::CreatorFeeAlreadyClaimed);
 
-    // Security: challenge period must have passed
-    let clock = Clock::get()?;
-    require!(
-        clock.unix_timestamp >= market.resolved_at + config.challenge_period_seconds,
-        DegenBetsError::ChallengePeriodActive
-    );
+    let total_payout;
 
-    // Creator gets: stored fee + LP value (winning tokens left in AMM pool)
-    let total_pot = market.total_minted;
-    let total_rake = market.treasury_fee
-        .checked_add(market.creator_fee)
-        .ok_or(DegenBetsError::MathOverflow)?;
-    let prize_pool = total_pot
-        .checked_sub(total_rake)
-        .ok_or(DegenBetsError::MathOverflow)?;
+    if market.status == MarketStatus::Resolved {
+        // --- Resolved: creator fee + LP value (existing logic) ---
 
-    let outcome = market.outcome.unwrap();
-    let winning_reserve = if outcome { market.yes_reserve } else { market.no_reserve };
-    let lp_value = (winning_reserve as u128)
-        .checked_mul(prize_pool as u128)
-        .ok_or(DegenBetsError::MathOverflow)?
-        .checked_div(total_pot as u128)
-        .ok_or(DegenBetsError::MathOverflow)? as u64;
+        // Security: challenge period must have passed
+        let clock = Clock::get()?;
+        require!(
+            clock.unix_timestamp >= market.resolved_at + config.challenge_period_seconds,
+            DegenBetsError::ChallengePeriodActive
+        );
 
-    let total_payout = market.creator_fee
-        .checked_add(lp_value)
-        .ok_or(DegenBetsError::MathOverflow)?;
+        let total_pot = market.total_minted;
+        let total_rake = market.treasury_fee
+            .checked_add(market.creator_fee)
+            .ok_or(DegenBetsError::MathOverflow)?;
+        let prize_pool = total_pot
+            .checked_sub(total_rake)
+            .ok_or(DegenBetsError::MathOverflow)?;
 
-    // Rent-exemption guard
-    let rent = Rent::get()?;
-    let min_balance = rent.minimum_balance(Market::SIZE);
-    let market_lamports = ctx.accounts.market.to_account_info().lamports();
-    require!(
-        market_lamports.checked_sub(total_payout).unwrap_or(0) >= min_balance,
-        DegenBetsError::InsufficientRentBalance
-    );
+        let outcome = market.outcome.unwrap();
+        let winning_reserve = if outcome { market.yes_reserve } else { market.no_reserve };
+        let lp_value = if total_pot > 0 {
+            (winning_reserve as u128)
+                .checked_mul(prize_pool as u128)
+                .ok_or(DegenBetsError::MathOverflow)?
+                .checked_div(total_pot as u128)
+                .ok_or(DegenBetsError::MathOverflow)? as u64
+        } else {
+            0
+        };
 
-    // Transfer from market PDA to creator
-    **ctx.accounts.market.to_account_info().try_borrow_mut_lamports()? -= total_payout;
-    **ctx.accounts.creator.to_account_info().try_borrow_mut_lamports()? += total_payout;
+        total_payout = market.creator_fee
+            .checked_add(lp_value)
+            .ok_or(DegenBetsError::MathOverflow)?;
+    } else {
+        // --- Voided: return initial liquidity to creator ---
+        total_payout = market.initial_liquidity;
+    }
+
+    if total_payout > 0 {
+        // Rent-exemption guard
+        let rent = Rent::get()?;
+        let min_balance = rent.minimum_balance(Market::SIZE);
+        let market_lamports = ctx.accounts.market.to_account_info().lamports();
+        require!(
+            market_lamports.checked_sub(total_payout).unwrap_or(0) >= min_balance,
+            DegenBetsError::InsufficientRentBalance
+        );
+
+        // Transfer from market PDA to creator
+        **ctx.accounts.market.to_account_info().try_borrow_mut_lamports()? -= total_payout;
+        **ctx.accounts.creator.to_account_info().try_borrow_mut_lamports()? += total_payout;
+    }
 
     // Update market
     let market = &mut ctx.accounts.market;
