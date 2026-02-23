@@ -467,3 +467,70 @@ body::before {
     transform: translateX(0);
   }
 }
+
+/* ===== Swipe Mode ===== */
+.swipe-card {
+  position: absolute;
+  width: 100%;
+  max-width: 380px;
+  touch-action: none;
+  user-select: none;
+  will-change: transform;
+}
+
+.swipe-card-settling {
+  transition: transform 0.25s ease-out;
+}
+
+.swipe-card-exiting {
+  transition: transform 0.3s ease-in;
+}
+
+.swipe-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display), 'Orbitron', monospace;
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+}
+
+.swipe-overlay-yes {
+  background: rgba(0, 255, 136, 0.12);
+  border: 3px solid rgb(var(--degen-green));
+  color: rgb(var(--degen-green));
+}
+
+.swipe-overlay-no {
+  background: rgba(255, 68, 68, 0.12);
+  border: 3px solid rgb(var(--degen-red));
+  color: rgb(var(--degen-red));
+}
+
+.wager-pill {
+  @apply px-4 py-2 rounded-full text-sm font-bold border border-degen-border
+    text-degen-muted bg-degen-card transition-all duration-200 cursor-pointer;
+}
+
+.wager-pill:hover {
+  @apply border-degen-accent/40 text-degen-text;
+}
+
+.wager-pill-active {
+  @apply border-degen-accent text-degen-accent bg-degen-accent/10
+    shadow-[0_0_12px_rgba(var(--degen-accent),0.3)];
+}
+
+/* Safe area padding for notched phones */
+.pt-safe {
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+
+.pb-safe {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}

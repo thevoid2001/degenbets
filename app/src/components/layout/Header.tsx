@@ -51,6 +51,7 @@ export function Header() {
         {/* Nav row: horizontally scrollable on mobile */}
         <nav className="flex items-center justify-center gap-2 pb-3 sm:pb-4 overflow-x-auto scrollbar-hide">
           {[
+            { href: "/swipe", label: "Swipe" },
             { href: "/", label: "Markets" },
             { href: "/create", label: "Create" },
             { href: "/portfolio", label: "Portfolio" },
