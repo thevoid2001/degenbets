@@ -1,4 +1,4 @@
-const CACHE = "launchmarket-v1";
+const CACHE = "launchmarket-v2";
 const SHELL = ["/swipe/", "/launchmarket-icon.svg", "/launchmarket-logo.svg"];
 
 self.addEventListener("install", (e) => {

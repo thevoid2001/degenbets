@@ -4,9 +4,10 @@
       <stop offset="0%" style="stop-color:#ffffff"/>
       <stop offset="100%" style="stop-color:#93C5FD"/>
     </linearGradient>
-    <linearGradient id="trailGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:0.8"/>
-      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:0"/>
+    <linearGradient id="swooshGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0"/>
+      <stop offset="40%" style="stop-color:#ffffff;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/>
     </linearGradient>
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
@@ -26,8 +27,8 @@
       filter: url(#glow);
     }
   </style>
-  <!-- Subtle trail swoosh behind text -->
-  <path d="M 20 50 Q 80 15, 180 20 T 540 45" stroke="url(#trailGrad)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Centered white swoosh behind text -->
+  <path d="M 10 58 Q 140 40, 280 38 Q 420 40, 550 58 L 550 62 Q 420 48, 280 46 Q 140 48, 10 62 Z" fill="url(#swooshGrad)"/>
   <!-- Main text -->
   <text x="50%" y="65" text-anchor="middle" class="logo-text">LAUNCHMARKET</text>
 </svg>
