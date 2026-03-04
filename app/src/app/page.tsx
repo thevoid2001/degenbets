@@ -21,14 +21,14 @@ export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    const seen = sessionStorage.getItem("degenbets-splash-seen");
+    const seen = sessionStorage.getItem("marketmint-splash-seen");
     if (seen) {
       setShowSplash(false);
     }
   }, []);
 
   const handleEnter = () => {
-    sessionStorage.setItem("degenbets-splash-seen", "1");
+    sessionStorage.setItem("marketmint-splash-seen", "1");
     setShowSplash(false);
   };
 
@@ -40,7 +40,7 @@ export default function Home() {
     <div>
       <div className="text-center mb-8 sm:mb-12">
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-3 sm:mb-4 neon-text leading-tight">
-          Create. Bet. Earn.
+          Mint. Trade. Earn.
         </h1>
         <p className="text-degen-text-secondary text-base sm:text-lg max-w-xl mx-auto">
           Prediction Market Launchpad on Solana

@@ -14,8 +14,8 @@ export function SwipeTopBar({ onSkip, canSkip }: SwipeTopBarProps) {
       <div className="flex items-center gap-3 py-3">
         <Link href="/" className="logo-glow">
           <img
-            src="/degenbets-neon-icon.svg"
-            alt="DegenBets"
+            src="/marketmint-icon.svg"
+            alt="MarketMint"
             className="h-8 w-8"
           />
         </Link>

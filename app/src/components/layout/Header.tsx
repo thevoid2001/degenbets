@@ -14,7 +14,7 @@ export function Header() {
         <div className="flex items-center justify-between h-20 sm:h-32">
           <Link href="/" className="logo-glow shrink-0">
             <img
-              src="/degenbets-neon-icon.svg"
+              src="/marketmint-icon.svg"
               alt=""
               className="h-10 w-10 sm:h-14 sm:w-14"
             />
@@ -22,8 +22,8 @@ export function Header() {
 
           <Link href="/" className="logo-glow absolute left-1/2 -translate-x-1/2 hidden sm:block">
             <img
-              src="/degenbets-neon-logo.svg"
-              alt="DegenBets"
+              src="/marketmint-logo.svg"
+              alt="MarketMint"
               className="h-36"
             />
           </Link>

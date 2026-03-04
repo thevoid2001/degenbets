@@ -21,7 +21,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("degenbets-theme") as Theme | null;
+    const stored = localStorage.getItem("marketmint-theme") as Theme | null;
     if (stored) {
       setTheme(stored);
     }
@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } else {
       root.classList.remove("dark");
     }
-    localStorage.setItem("degenbets-theme", theme);
+    localStorage.setItem("marketmint-theme", theme);
   }, [theme, mounted]);
 
   const toggleTheme = () => {

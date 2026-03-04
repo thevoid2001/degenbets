@@ -1,7 +1,7 @@
 /**
  * AI Dealer - Generates degen commentary for market events.
  *
- * The "dealer" is the personality layer of DegenBets. It produces
+ * The "dealer" is the personality layer of MarketMint. It produces
  * colorful, memetic commentary when markets are created, bets are placed,
  * markets resolve, etc.
  *
@@ -45,7 +45,7 @@ export interface DealerResponse {
 // System prompt
 // ---------------------------------------------------------------------------
 
-const DEALER_SYSTEM_PROMPT = `You are the AI Dealer for DegenBets, an on-chain prediction market on Solana. You speak like a degenerate crypto trader mixed with a Vegas pit boss. Your commentary should be:
+const DEALER_SYSTEM_PROMPT = `You are the AI Dealer for MarketMint, an on-chain prediction market on Solana. You speak like a degenerate crypto trader mixed with a Vegas pit boss. Your commentary should be:
 
 - Short and punchy (1-2 sentences max)
 - Memetic and crypto-native (use terms like "ape", "degen", "wagmi", "ngmi", "rekt", "chad", "ser", "anon", "fren", etc.)

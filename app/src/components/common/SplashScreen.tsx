@@ -60,7 +60,7 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
                 fontSize="100"
                 fill="#000"
               >
-                D
+                M
               </text>
             </svg>
           </div>
@@ -70,7 +70,7 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
 
         {/* Logo text */}
         <div className={`splash-title ${phase >= 2 ? "splash-title-visible" : ""}`}>
-          {"DEGENBETS".split("").map((char, i) => (
+          {"MARKETMINT".split("").map((char, i) => (
             <span
               key={i}
               className="splash-letter"

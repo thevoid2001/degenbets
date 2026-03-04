@@ -120,7 +120,7 @@ async function askAI(
 
   const hasSourceText = sourceText.length > 100 && !sourceText.startsWith("[FETCH ERROR");
 
-  const systemPrompt = `You are the resolution oracle for a prediction market platform called DegenBets. Your job is to determine whether a prediction market question has resolved YES, NO, or should be VOIDED.
+  const systemPrompt = `You are the resolution oracle for a prediction market platform called MarketMint. Your job is to determine whether a prediction market question has resolved YES, NO, or should be VOIDED.
 
 Rules:
 1. You have access to web search. USE IT to verify the outcome of the market question.

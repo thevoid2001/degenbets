@@ -22,5 +22,5 @@
     }
   </style>
   <rect x="20" y="20" width="160" height="160" rx="32" fill="url(#neonIconGradient)" filter="url(#iconGlow)"/>
-  <text x="50%" y="138" text-anchor="middle" class="icon-text">D</text>
+  <text x="50%" y="138" text-anchor="middle" class="icon-text">M</text>
 </svg>

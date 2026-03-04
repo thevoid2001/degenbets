@@ -1,7 +1,7 @@
 {
-  "name": "DegenBets",
-  "short_name": "DegenBets",
-  "description": "Prediction market launchpad on Solana. Create. Bet. Earn.",
+  "name": "MarketMint",
+  "short_name": "MarketMint",
+  "description": "Prediction market launchpad on Solana. Mint. Trade. Earn.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
@@ -25,7 +25,7 @@
       "purpose": "maskable"
     },
     {
-      "src": "/degenbets-neon-icon.svg",
+      "src": "/marketmint-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     }

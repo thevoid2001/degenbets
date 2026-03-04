@@ -1,5 +1,5 @@
-const CACHE = "degenbets-v1";
-const SHELL = ["/swipe/", "/degenbets-neon-icon.svg", "/degenbets-neon-logo.svg"];
+const CACHE = "marketmint-v1";
+const SHELL = ["/swipe/", "/marketmint-icon.svg", "/marketmint-logo.svg"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)));
