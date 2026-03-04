@@ -82,9 +82,19 @@ pub fn handler(ctx: Context<ClaimWinnings>) -> Result<()> {
         DegenBetsError::InsufficientRentBalance
     );
 
-    // Transfer from market PDA to user
-    **ctx.accounts.market.to_account_info().try_borrow_mut_lamports()? -= user_share;
-    **ctx.accounts.user.to_account_info().try_borrow_mut_lamports()? += user_share;
+    // Transfer from market PDA to user (checked arithmetic)
+    {
+        let market_info = ctx.accounts.market.to_account_info();
+        let mut market_lamps = market_info.try_borrow_mut_lamports()?;
+        let user_info = ctx.accounts.user.to_account_info();
+        let mut user_lamps = user_info.try_borrow_mut_lamports()?;
+        **market_lamps = market_lamps
+            .checked_sub(user_share)
+            .ok_or(DegenBetsError::MathOverflow)?;
+        **user_lamps = user_lamps
+            .checked_add(user_share)
+            .ok_or(DegenBetsError::MathOverflow)?;
+    }
 
     // Mark claimed
     let position = &mut ctx.accounts.position;

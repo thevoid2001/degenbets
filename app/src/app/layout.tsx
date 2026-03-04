@@ -14,9 +14,30 @@ const orbitron = Orbitron({ subsets: ["latin"], variable: "--font-display", weig
 export const metadata: Metadata = {
   title: "DegenBets - Prediction Market Launchpad on Solana",
   description: "Create. Bet. Earn. Launch prediction markets on anything, powered by Solana.",
+  metadataBase: new URL("https://degenbets-a4f.pages.dev"),
   icons: {
-    icon: "/degenbets-neon-icon.svg",
-    apple: "/degenbets-neon-icon.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/degenbets-neon-icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "DegenBets - Prediction Markets on Solana",
+    description: "Create. Bet. Earn. Launch prediction markets on anything, powered by Solana.",
+    url: "https://degenbets-a4f.pages.dev",
+    siteName: "DegenBets",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "DegenBets - Prediction Markets on Solana" }],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DegenBets - Prediction Markets on Solana",
+    description: "Create. Bet. Earn. Launch prediction markets on anything.",
+    images: ["/og-image.png"],
   },
 };
 

@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import dotenv from "dotenv";
 import cron from "node-cron";
@@ -16,7 +18,37 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// Security headers
+app.use(helmet());
+
+// CORS whitelist
+const ALLOWED_ORIGINS = [
+  "https://degenbets-a4f.pages.dev",
+  process.env.FRONTEND_URL,
+  ...(process.env.NODE_ENV !== "production" ? ["http://localhost:3000", "http://localhost:3001"] : []),
+].filter(Boolean) as string[];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST"],
+}));
+
+// Rate limiting
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests, please try again later" },
+});
+app.use(globalLimiter);
+
 app.use(express.json());
 
 // Serve uploaded images
@@ -30,8 +62,14 @@ app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/sync", syncRouter);
 app.use("/api/trades", tradesRouter);
 
-// Resolution trigger endpoint
-app.post("/api/resolve/trigger", async (_req, res) => {
+// Resolution trigger endpoint (protected)
+const resolveLimiter = rateLimit({ windowMs: 60 * 1000, max: 5, message: { error: "Rate limited" } });
+app.post("/api/resolve/trigger", resolveLimiter, async (req, res) => {
+  const apiKey = req.headers["x-api-key"];
+  if (process.env.RESOLVE_API_KEY && apiKey !== process.env.RESOLVE_API_KEY) {
+    res.status(403).json({ error: "Unauthorized" });
+    return;
+  }
   try {
     const stats = await resolveReadyMarkets();
     res.json({ success: true, stats });
@@ -45,28 +83,6 @@ app.post("/api/resolve/trigger", async (_req, res) => {
 // Health check
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: Date.now() });
-});
-
-// Admin: reset all data (for dev/testing only)
-app.post("/api/admin/reset", async (req, res) => {
-  const key = req.headers["x-admin-key"];
-  if (key !== process.env.AUTHORITY_PRIVATE_KEY?.slice(0, 16)) {
-    res.status(403).json({ error: "Unauthorized" });
-    return;
-  }
-  try {
-    const { query: dbQuery } = await import("./db/pool");
-    await dbQuery("DELETE FROM trades");
-    await dbQuery("DELETE FROM resolution_logs");
-    await dbQuery("DELETE FROM positions");
-    await dbQuery("DELETE FROM markets");
-    await dbQuery("DELETE FROM creator_profiles");
-    await dbQuery("DELETE FROM user_stats");
-    res.json({ success: true, message: "All data cleared" });
-  } catch (err) {
-    console.error("[admin] Reset error:", err);
-    res.status(500).json({ error: "Reset failed" });
-  }
 });
 
 // Resolution cron - every 5 minutes

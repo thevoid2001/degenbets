@@ -51,8 +51,17 @@ pub fn handler(ctx: Context<ClaimRefund>) -> Result<()> {
             DegenBetsError::InsufficientRentBalance
         );
 
-        **ctx.accounts.market.to_account_info().try_borrow_mut_lamports()? -= refund_amount;
-        **ctx.accounts.user.to_account_info().try_borrow_mut_lamports()? += refund_amount;
+        // Checked arithmetic transfer
+        let market_info = ctx.accounts.market.to_account_info();
+        let mut market_lamps = market_info.try_borrow_mut_lamports()?;
+        let user_info = ctx.accounts.user.to_account_info();
+        let mut user_lamps = user_info.try_borrow_mut_lamports()?;
+        **market_lamps = market_lamps
+            .checked_sub(refund_amount)
+            .ok_or(DegenBetsError::MathOverflow)?;
+        **user_lamps = user_lamps
+            .checked_add(refund_amount)
+            .ok_or(DegenBetsError::MathOverflow)?;
     }
 
     let position = &mut ctx.accounts.position;

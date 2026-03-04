@@ -88,9 +88,19 @@ pub fn handler(ctx: Context<Sell>, shares: u64, side: bool) -> Result<()> {
         DegenBetsError::InsufficientRentBalance
     );
 
-    // Transfer SOL from market PDA to user
-    **market.to_account_info().try_borrow_mut_lamports()? -= total_sol_out;
-    **ctx.accounts.user.to_account_info().try_borrow_mut_lamports()? += total_sol_out;
+    // Transfer SOL from market PDA to user (checked arithmetic)
+    {
+        let market_info = market.to_account_info();
+        let mut market_lamps = market_info.try_borrow_mut_lamports()?;
+        let user_info = ctx.accounts.user.to_account_info();
+        let mut user_lamps = user_info.try_borrow_mut_lamports()?;
+        **market_lamps = market_lamps
+            .checked_sub(total_sol_out)
+            .ok_or(DegenBetsError::MathOverflow)?;
+        **user_lamps = user_lamps
+            .checked_add(total_sol_out)
+            .ok_or(DegenBetsError::MathOverflow)?;
+    }
 
     // Update position (deduct sold shares)
     if side {

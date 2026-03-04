@@ -93,9 +93,17 @@ pub fn handler(ctx: Context<ClaimCreatorFee>) -> Result<()> {
             DegenBetsError::InsufficientRentBalance
         );
 
-        // Transfer from market PDA to creator
-        **ctx.accounts.market.to_account_info().try_borrow_mut_lamports()? -= total_payout;
-        **ctx.accounts.creator.to_account_info().try_borrow_mut_lamports()? += total_payout;
+        // Transfer from market PDA to creator (checked arithmetic)
+        let market_info = ctx.accounts.market.to_account_info();
+        let mut market_lamps = market_info.try_borrow_mut_lamports()?;
+        let creator_info = ctx.accounts.creator.to_account_info();
+        let mut creator_lamps = creator_info.try_borrow_mut_lamports()?;
+        **market_lamps = market_lamps
+            .checked_sub(total_payout)
+            .ok_or(DegenBetsError::MathOverflow)?;
+        **creator_lamps = creator_lamps
+            .checked_add(total_payout)
+            .ok_or(DegenBetsError::MathOverflow)?;
     }
 
     // Update market

@@ -29,6 +29,7 @@ pub struct Buy<'info> {
         space = Position::SIZE,
         seeds = [b"position", market.key().as_ref(), user.key().as_ref()],
         bump,
+        constraint = !position.claimed @ DegenBetsError::AlreadyClaimed,
     )]
     pub position: Account<'info, Position>,
 
