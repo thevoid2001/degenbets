@@ -49,18 +49,15 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
                   <stop offset="0%" stopColor="#3B82F6" />
                   <stop offset="100%" stopColor="#2563EB" />
                 </linearGradient>
-                <linearGradient id="splashTrail" x1="0%" y1="100%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.2" />
+                <linearGradient id="splashSwoosh" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+                  <stop offset="40%" stopColor="#ffffff" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
                 </linearGradient>
               </defs>
               <rect x="20" y="20" width="160" height="160" rx="32" fill="url(#splashBg)" />
+              <path d="M 22 108 Q 65 78, 110 76 Q 150 74, 178 85 L 178 94 Q 150 86, 110 88 Q 65 90, 22 116 Z" fill="url(#splashSwoosh)" />
               <path d="M 58 48 L 80 48 L 80 130 L 142 130 L 142 152 L 58 152 Z" fill="#ffffff" />
-              <path d="M 82 52 C 105 22, 138 18, 162 28" stroke="url(#splashTrail)" strokeWidth="6" fill="none" strokeLinecap="round" />
-              <path d="M 80 58 C 100 35, 128 28, 150 34" stroke="#ffffff" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.35" />
-              <circle cx="162" cy="28" r="5" fill="#ffffff" opacity="0.9" />
-              <circle cx="153" cy="24" r="2.5" fill="#ffffff" opacity="0.5" />
-              <circle cx="146" cy="22" r="1.5" fill="#ffffff" opacity="0.3" />
             </svg>
           </div>
           {/* Pulse ring */}
