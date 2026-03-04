@@ -45,23 +45,22 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
           <div className="splash-icon-inner">
             <svg width="120" height="120" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <linearGradient id="splashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id="splashBg" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#3B82F6" />
-                  <stop offset="100%" stopColor="#60A5FA" />
+                  <stop offset="100%" stopColor="#2563EB" />
+                </linearGradient>
+                <linearGradient id="splashTrail" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.2" />
                 </linearGradient>
               </defs>
-              <rect x="20" y="20" width="160" height="160" rx="32" fill="url(#splashGrad)" />
-              <text
-                x="50%"
-                y="138"
-                textAnchor="middle"
-                fontFamily="'Orbitron', monospace"
-                fontWeight="900"
-                fontSize="100"
-                fill="#fff"
-              >
-                L
-              </text>
+              <rect x="20" y="20" width="160" height="160" rx="32" fill="url(#splashBg)" />
+              <path d="M 58 48 L 80 48 L 80 130 L 142 130 L 142 152 L 58 152 Z" fill="#ffffff" />
+              <path d="M 82 52 C 105 22, 138 18, 162 28" stroke="url(#splashTrail)" strokeWidth="6" fill="none" strokeLinecap="round" />
+              <path d="M 80 58 C 100 35, 128 28, 150 34" stroke="#ffffff" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.35" />
+              <circle cx="162" cy="28" r="5" fill="#ffffff" opacity="0.9" />
+              <circle cx="153" cy="24" r="2.5" fill="#ffffff" opacity="0.5" />
+              <circle cx="146" cy="22" r="1.5" fill="#ffffff" opacity="0.3" />
             </svg>
           </div>
           {/* Pulse ring */}
