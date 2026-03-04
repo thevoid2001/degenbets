@@ -7,7 +7,7 @@ export default function PrivacyPage() {
       <section className="space-y-3">
         <h2 className="text-xl font-bold">1. Overview</h2>
         <p className="text-degen-muted text-sm leading-relaxed">
-          MarketMint is a decentralized application that prioritizes user privacy. We do not require account creation, email addresses, or any personal identifying information. All interaction with the platform is wallet-based.
+          LaunchMarket is a decentralized application that prioritizes user privacy. We do not require account creation, email addresses, or any personal identifying information. All interaction with the platform is wallet-based.
         </p>
       </section>
 

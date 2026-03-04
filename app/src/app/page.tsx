@@ -40,7 +40,7 @@ export default function Home() {
     <div>
       <div className="text-center mb-8 sm:mb-12">
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-3 sm:mb-4 neon-text leading-tight">
-          Mint. Trade. Earn.
+          Launch. Trade. Earn.
         </h1>
         <p className="text-degen-text-secondary text-base sm:text-lg max-w-xl mx-auto">
           Prediction Market Launchpad on Solana

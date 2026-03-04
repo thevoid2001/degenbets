@@ -99,5 +99,5 @@ cron.schedule("*/5 * * * *", async () => {
 
 
 app.listen(PORT, () => {
-  console.log(`[server] MarketMint backend running on port ${PORT}`);
+  console.log(`[server] LaunchMarket backend running on port ${PORT}`);
 });

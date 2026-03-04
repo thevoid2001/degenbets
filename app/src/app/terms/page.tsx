@@ -7,21 +7,21 @@ export default function TermsPage() {
       <section className="space-y-3">
         <h2 className="text-xl font-bold">1. Platform Description</h2>
         <p className="text-degen-muted text-sm leading-relaxed">
-          MarketMint is a decentralized prediction market platform built on the Solana blockchain. Users can create markets on real-world events, buy and sell outcome shares, and earn returns based on correct predictions. MarketMint does not provide financial advice and is not a licensed financial service.
+          LaunchMarket is a decentralized prediction market platform built on the Solana blockchain. Users can create markets on real-world events, buy and sell outcome shares, and earn returns based on correct predictions. LaunchMarket does not provide financial advice and is not a licensed financial service.
         </p>
       </section>
 
       <section className="space-y-3">
         <h2 className="text-xl font-bold">2. Eligibility</h2>
         <p className="text-degen-muted text-sm leading-relaxed">
-          You must be of legal age in your jurisdiction to use this platform. You are responsible for ensuring that your use of MarketMint complies with all applicable laws and regulations in your jurisdiction. Prediction markets may be restricted or prohibited in certain regions.
+          You must be of legal age in your jurisdiction to use this platform. You are responsible for ensuring that your use of LaunchMarket complies with all applicable laws and regulations in your jurisdiction. Prediction markets may be restricted or prohibited in certain regions.
         </p>
       </section>
 
       <section className="space-y-3">
         <h2 className="text-xl font-bold">3. User Responsibilities</h2>
         <p className="text-degen-muted text-sm leading-relaxed">
-          You are solely responsible for the security of your wallet and private keys. MarketMint does not custody your funds at any time &mdash; all transactions occur directly on the Solana blockchain. You acknowledge that you may lose some or all of the funds you commit to prediction markets.
+          You are solely responsible for the security of your wallet and private keys. LaunchMarket does not custody your funds at any time &mdash; all transactions occur directly on the Solana blockchain. You acknowledge that you may lose some or all of the funds you commit to prediction markets.
         </p>
       </section>
 
@@ -49,7 +49,7 @@ export default function TermsPage() {
       <section className="space-y-3">
         <h2 className="text-xl font-bold">7. Limitation of Liability</h2>
         <p className="text-degen-muted text-sm leading-relaxed">
-          MarketMint is provided &ldquo;as is&rdquo; without warranties of any kind. The platform operators shall not be liable for any losses resulting from smart contract bugs, incorrect market resolutions, blockchain network issues, or any other cause. Your use of the platform is entirely at your own risk.
+          LaunchMarket is provided &ldquo;as is&rdquo; without warranties of any kind. The platform operators shall not be liable for any losses resulting from smart contract bugs, incorrect market resolutions, blockchain network issues, or any other cause. Your use of the platform is entirely at your own risk.
         </p>
       </section>
 

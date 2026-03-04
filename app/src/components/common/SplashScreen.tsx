@@ -46,8 +46,8 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
             <svg width="120" height="120" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="splashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00ff88" />
-                  <stop offset="100%" stopColor="#00d4ff" />
+                  <stop offset="0%" stopColor="#3B82F6" />
+                  <stop offset="100%" stopColor="#60A5FA" />
                 </linearGradient>
               </defs>
               <rect x="20" y="20" width="160" height="160" rx="32" fill="url(#splashGrad)" />
@@ -58,9 +58,9 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
                 fontFamily="'Orbitron', monospace"
                 fontWeight="900"
                 fontSize="100"
-                fill="#000"
+                fill="#fff"
               >
-                M
+                L
               </text>
             </svg>
           </div>
@@ -70,7 +70,7 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
 
         {/* Logo text */}
         <div className={`splash-title ${phase >= 2 ? "splash-title-visible" : ""}`}>
-          {"MARKETMINT".split("").map((char, i) => (
+          {"LAUNCHMARKET".split("").map((char, i) => (
             <span
               key={i}
               className="splash-letter"

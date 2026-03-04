@@ -1,11 +1,11 @@
 {
-  "name": "MarketMint",
-  "short_name": "MarketMint",
-  "description": "Prediction market launchpad on Solana. Mint. Trade. Earn.",
+  "name": "LaunchMarket",
+  "short_name": "LaunchMarket",
+  "description": "Prediction market launchpad on Solana. Launch. Trade. Earn.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
-  "theme_color": "#00d4ff",
+  "theme_color": "#3B82F6",
   "orientation": "portrait",
   "icons": [
     {
@@ -25,7 +25,7 @@
       "purpose": "maskable"
     },
     {
-      "src": "/marketmint-icon.svg",
+      "src": "/launchmarket-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     }

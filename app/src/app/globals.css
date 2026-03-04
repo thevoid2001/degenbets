@@ -3,28 +3,16 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --degen-green: 5 150 105;
-    --degen-red: 220 38 38;
-    --degen-bg: 240 242 245;
-    --degen-card: 255 255 255;
-    --degen-border: 226 232 240;
-    --degen-muted: 100 116 139;
-    --degen-accent: 8 145 178;
-    --degen-accent-alt: 124 58 237;
-    --degen-text: 15 23 42;
-    --degen-text-secondary: 71 85 105;
-  }
-
+  :root,
   .dark {
-    --degen-green: 0 255 136;
-    --degen-red: 255 68 68;
-    --degen-bg: 10 10 15;
-    --degen-card: 18 18 26;
-    --degen-border: 30 30 46;
+    --degen-green: 34 197 94;
+    --degen-red: 239 68 68;
+    --degen-bg: 9 9 11;
+    --degen-card: 17 24 39;
+    --degen-border: 31 41 55;
     --degen-muted: 107 114 128;
-    --degen-accent: 0 212 255;
-    --degen-accent-alt: 191 0 255;
+    --degen-accent: 59 130 246;
+    --degen-accent-alt: 96 165 250;
     --degen-text: 255 255 255;
     --degen-text-secondary: 148 163 184;
   }
@@ -34,24 +22,15 @@
   }
 }
 
-/* Light mode background mesh */
+/* Dark background mesh */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(0, 212, 255, 0.12), transparent 50%),
-    radial-gradient(ellipse 60% 50% at 90% 70%, rgba(124, 58, 237, 0.10), transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(5, 150, 105, 0.08), transparent 50%),
-    rgb(var(--degen-bg));
-  transition: background 0.3s ease;
-}
-
-.dark body::before {
-  background:
-    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(0, 212, 255, 0.06), transparent 50%),
-    radial-gradient(ellipse 60% 50% at 90% 70%, rgba(191, 0, 255, 0.04), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(59, 130, 246, 0.06), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 90% 70%, rgba(96, 165, 250, 0.04), transparent 50%),
     rgb(var(--degen-bg));
 }
 
@@ -74,10 +53,6 @@ body::before {
 
   .input-field {
     @apply w-full bg-degen-dark border border-degen-border rounded-lg px-4 py-3 text-degen-text placeholder-degen-muted focus:outline-none focus:border-degen-accent transition-colors;
-    color-scheme: light;
-  }
-
-  .dark .input-field {
     color-scheme: dark;
   }
 
@@ -137,19 +112,19 @@ body::before {
 
 /* Logo glow */
 .logo-glow img {
-  filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5)) drop-shadow(0 0 20px rgba(0, 212, 255, 0.2));
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.2));
   transition: filter 0.3s ease;
 }
 
 .logo-glow:hover img {
-  filter: drop-shadow(0 0 12px rgba(0, 212, 255, 0.7)) drop-shadow(0 0 30px rgba(0, 212, 255, 0.35));
+  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.7)) drop-shadow(0 0 30px rgba(59, 130, 246, 0.35));
 }
 
 /* Neon gradient text for headings */
 .neon-text {
   background: linear-gradient(
     135deg,
-    rgb(var(--degen-green)),
+    #ffffff,
     rgb(var(--degen-accent)),
     rgb(var(--degen-accent-alt))
   );
@@ -183,8 +158,8 @@ body::before {
   position: absolute;
   inset: -50%;
   background-image:
-    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
   background-size: 60px 60px;
   animation: gridMove 20s linear infinite;
 }
@@ -206,7 +181,7 @@ body::before {
 .splash-orb-1 {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(0, 255, 136, 0.3), transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25), transparent 70%);
   top: -10%;
   left: -5%;
   animation-delay: 0s;
@@ -215,7 +190,7 @@ body::before {
 .splash-orb-2 {
   width: 350px;
   height: 350px;
-  background: radial-gradient(circle, rgba(0, 212, 255, 0.25), transparent 70%);
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.2), transparent 70%);
   bottom: -10%;
   right: -5%;
   animation-delay: -3s;
@@ -224,7 +199,7 @@ body::before {
 .splash-orb-3 {
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(191, 0, 255, 0.2), transparent 70%);
+  background: radial-gradient(circle, rgba(147, 197, 253, 0.15), transparent 70%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -275,16 +250,16 @@ body::before {
 .splash-icon-inner {
   position: relative;
   z-index: 1;
-  filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.5)) drop-shadow(0 0 40px rgba(0, 212, 255, 0.3));
+  filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 40px rgba(96, 165, 250, 0.3));
   animation: iconGlow 3s ease-in-out infinite;
 }
 
 @keyframes iconGlow {
   0%, 100% {
-    filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.5)) drop-shadow(0 0 40px rgba(0, 212, 255, 0.3));
+    filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 40px rgba(96, 165, 250, 0.3));
   }
   50% {
-    filter: drop-shadow(0 0 30px rgba(0, 255, 136, 0.7)) drop-shadow(0 0 60px rgba(0, 212, 255, 0.5));
+    filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.7)) drop-shadow(0 0 60px rgba(96, 165, 250, 0.5));
   }
 }
 
@@ -293,7 +268,7 @@ body::before {
   position: absolute;
   inset: -20px;
   border-radius: 40px;
-  border: 2px solid rgba(0, 212, 255, 0.3);
+  border: 2px solid rgba(59, 130, 246, 0.3);
   opacity: 0;
 }
 
@@ -334,11 +309,11 @@ body::before {
   display: inline-block;
   opacity: 0;
   transform: translateY(40px) rotateX(90deg);
-  background: linear-gradient(135deg, #00ff88, #00d4ff, #bf00ff);
+  background: linear-gradient(135deg, #ffffff, #93C5FD, #3B82F6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.4));
+  filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.4));
 }
 
 .splash-title-visible .splash-letter {
@@ -386,8 +361,8 @@ body::before {
   font-size: 1rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #000;
-  background: linear-gradient(135deg, #00ff88, #00d4ff);
+  color: #fff;
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -403,7 +378,7 @@ body::before {
   position: absolute;
   inset: -2px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #00ff88, #00d4ff, #bf00ff);
+  background: linear-gradient(135deg, #3B82F6, #60A5FA, #93C5FD);
   z-index: -1;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -417,7 +392,7 @@ body::before {
 
 .splash-enter:hover {
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 0 30px rgba(0, 255, 136, 0.4), 0 0 60px rgba(0, 212, 255, 0.2);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.4), 0 0 60px rgba(96, 165, 250, 0.2);
 }
 
 .splash-enter:active {
@@ -426,10 +401,10 @@ body::before {
 
 @keyframes btnPulse {
   0%, 100% {
-    box-shadow: 0 0 15px rgba(0, 255, 136, 0.2), 0 0 30px rgba(0, 212, 255, 0.1);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2), 0 0 30px rgba(96, 165, 250, 0.1);
   }
   50% {
-    box-shadow: 0 0 25px rgba(0, 255, 136, 0.4), 0 0 50px rgba(0, 212, 255, 0.2);
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), 0 0 50px rgba(96, 165, 250, 0.2);
   }
 }
 

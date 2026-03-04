@@ -1,5 +1,5 @@
-const CACHE = "marketmint-v1";
-const SHELL = ["/swipe/", "/marketmint-icon.svg", "/marketmint-logo.svg"];
+const CACHE = "launchmarket-v1";
+const SHELL = ["/swipe/", "/launchmarket-icon.svg", "/launchmarket-logo.svg"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)));

@@ -12,31 +12,31 @@ const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" }
 const orbitron = Orbitron({ subsets: ["latin"], variable: "--font-display", weight: ["400", "700", "900"] });
 
 export const metadata: Metadata = {
-  title: "MarketMint - Prediction Market Launchpad on Solana",
-  description: "Mint. Trade. Earn. Launch prediction markets on anything, powered by Solana.",
+  title: "LaunchMarket - Prediction Market Launchpad on Solana",
+  description: "Launch. Trade. Earn. Launch prediction markets on anything, powered by Solana.",
   metadataBase: new URL("https://degenbets-a4f.pages.dev"),
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/marketmint-icon.svg", type: "image/svg+xml" },
+      { url: "/launchmarket-icon.svg", type: "image/svg+xml" },
     ],
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: "MarketMint - Prediction Markets on Solana",
-    description: "Mint. Trade. Earn. Launch prediction markets on anything, powered by Solana.",
+    title: "LaunchMarket - Prediction Markets on Solana",
+    description: "Launch. Trade. Earn. Launch prediction markets on anything, powered by Solana.",
     url: "https://degenbets-a4f.pages.dev",
-    siteName: "MarketMint",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "MarketMint - Prediction Markets on Solana" }],
+    siteName: "LaunchMarket",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "LaunchMarket - Prediction Markets on Solana" }],
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarketMint - Prediction Markets on Solana",
-    description: "Mint. Trade. Earn. Launch prediction markets on anything.",
+    title: "LaunchMarket - Prediction Markets on Solana",
+    description: "Launch. Trade. Earn. Launch prediction markets on anything.",
     images: ["/og-image.png"],
   },
 };
@@ -53,17 +53,11 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="theme-color" content="#00d4ff" />
+        <meta name="theme-color" content="#3B82F6" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                try {
-                  var theme = localStorage.getItem('marketmint-theme');
-                  if (theme === 'light') {
-                    document.documentElement.classList.remove('dark');
-                  }
-                } catch (e) {}
                 if ('serviceWorker' in navigator) {
                   navigator.serviceWorker.register('/sw.js').catch(function() {});
                 }

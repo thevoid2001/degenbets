@@ -7,10 +7,10 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <p className="text-degen-text font-display font-bold tracking-wide mb-2">
-              MARKETMINT
+              LAUNCHMARKET
             </p>
             <p className="text-degen-muted text-sm">
-              Prediction market launchpad on Solana. $MINT
+              Prediction market launchpad on Solana. $LAUNCH
             </p>
           </div>
 
